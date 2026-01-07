@@ -1,10 +1,20 @@
-python3 init_db.py
-python3 data_poller.py --category=chassis --interval=60 &
+#!/bin/bash
+
+# Initialize database if it doesn't exist
+if [ ! -f "inventory.db" ]; then
+    echo "Initializing database..."
+    python3 init_db.py
+fi
+
+# Start background polling processes
+echo "Starting background polling processes..."
+python3 data_poller.py --category=chassis &
 sleep 15
-python3 data_poller.py --category=cards --interval=60 &
-python3 data_poller.py --category=ports --interval=60 &
-python3 data_poller.py --category=sensors --interval=60 &
-python3 data_poller.py --category=perf --interval=60 &
+python3 data_poller.py --category=cards &
+python3 data_poller.py --category=ports &
 python3 data_poller.py --category=licensing --interval=120 &
-python3 data_poller.py --category=data_purge --interval=1 & # 1 days
-flask --app /python-docker/myapp.py --debug run --host=0.0.0.0 -p 3000
+python3 data_poller.py --category=data_purge --interval=86400 &
+
+# Start FastAPI application
+echo "Starting FastAPI application..."
+python3 -m uvicorn main:app --host 0.0.0.0 --port 3000

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ixia-inventory-explorer
+    ports:
+      - "3000:3000"
+    volumes:
+      - ixia-data:/python-docker
+      # Mount database for persistence
+      - ./inventory.db:/python-docker/inventory.db
+    environment:
+      - PORT=3000
+      - DEBUG=False
+      - DATABASE_PATH=/python-docker/inventory.db
+      - CORS_ORIGINS=http://localhost:3000
+      - HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  ixia-data:
+    driver: local
+

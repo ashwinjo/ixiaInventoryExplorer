@@ -1,0 +1,149 @@
+# Product Requirements Document: Flask to FastAPI Migration with Modern UI
+
+## Project Overview
+Migrate the existing Ixia Inventory Explorer Flask application to FastAPI with a modern frontend using React, shadcn/ui, Tailwind CSS, and Vite.
+
+## Current State
+- Flask-based web application
+- Jinja2 templates for server-side rendering
+- SQLite database for data storage
+- Background polling processes for data collection
+- REST API integration with Ixia chassis
+
+## Target State
+- FastAPI backend with async support
+- React-based SPA frontend
+- shadcn/ui components for modern UI
+- Tailwind CSS for styling
+- Vite for frontend build tooling
+- RESTful API endpoints replacing Flask routes
+- Maintain all existing functionality
+
+## Functional Requirements
+
+### Backend Migration
+1. Convert Flask routes to FastAPI endpoints
+   - GET /chassisDetails -> GET /api/chassis
+   - GET /cardDetails -> GET /api/cards
+   - GET /licenseDetails -> GET /api/licenses
+   - GET /portDetails -> GET /api/ports
+   - GET /sensorInformation -> GET /api/sensors
+   - GET /lineChartPerfMetrics -> GET /api/performance/metrics
+   - POST /uploader -> POST /api/config/upload
+   - POST /setPollingIntervals -> POST /api/config/polling-intervals
+   - POST /addTags -> POST /api/tags/add
+   - POST /removeTags -> POST /api/tags/remove
+   - POST /getLogs -> POST /api/logs/collect
+   - GET /pollLatestData/{category} -> POST /api/poll/{category}
+
+2. Implement async database operations
+   - Migrate SQLite utilities to async/await pattern
+   - Use aiosqlite or similar for async database access
+
+3. API Response Format
+   - Standardize JSON responses
+   - Implement proper error handling with HTTP status codes
+   - Add request/response models using Pydantic
+
+4. CORS Configuration
+   - Configure CORS middleware for frontend communication
+   - Support development and production origins
+
+### Frontend Development
+1. Project Setup
+   - Initialize React + Vite project structure
+   - Configure Tailwind CSS
+   - Set up shadcn/ui component library
+   - Configure path aliases and build tools
+
+2. Component Architecture
+   - Create reusable UI components using shadcn/ui
+   - Implement routing with React Router
+   - Set up API client with axios
+   - Create context providers for state management
+
+3. Page Components
+   - Chassis Details page with table and filtering
+   - Card Details page
+   - License Details page
+   - Port Details page
+   - Sensor Information page
+   - Performance Metrics page with charts
+   - Configuration Upload page
+   - Settings page for polling intervals
+
+4. Features to Implement
+   - Data tables with sorting and filtering
+   - Tag management (add/remove tags)
+   - CSV export functionality
+   - Real-time performance charts
+   - On-demand data refresh
+   - Log collection interface
+   - Responsive design for mobile/tablet
+
+### Infrastructure & Configuration
+1. Configuration Files
+   - Update requirements.txt for FastAPI dependencies
+   - Create package.json for frontend dependencies
+   - Set up Vite configuration
+   - Configure Tailwind CSS
+   - Create environment variable templates
+   - Update Dockerfile for new stack
+
+2. Development Environment
+   - Set up hot-reload for both backend and frontend
+   - Configure proxy for API calls during development
+   - Create docker-compose.yml for local development
+
+3. Build & Deployment
+   - Separate build processes for backend and frontend
+   - Update Dockerfile to serve static frontend files
+   - Maintain backward compatibility with existing data
+
+## Technical Requirements
+
+### Backend Stack
+- FastAPI 0.104+
+- Uvicorn for ASGI server
+- Pydantic for data validation
+- Jinja2 (for backward compatibility during migration)
+- aiosqlite or sqlalchemy async for database
+- python-multipart for file uploads
+
+### Frontend Stack
+- React 18+
+- Vite 5+
+- React Router 6+
+- Tailwind CSS 3+
+- shadcn/ui components
+- Recharts for performance charts
+- Axios for API calls
+- Lucide React for icons
+
+### Database
+- Maintain SQLite database structure
+- Ensure data migration compatibility
+- Support existing polling processes
+
+## Non-Functional Requirements
+1. Performance: Maintain or improve response times
+2. Compatibility: Preserve all existing functionality
+3. Maintainability: Clean code structure with separation of concerns
+4. Scalability: Support async operations for better concurrency
+5. User Experience: Modern, responsive UI with improved UX
+
+## Migration Strategy
+1. Phase 1: Set up project structure and configuration
+2. Phase 2: Migrate backend API endpoints
+3. Phase 3: Build frontend components
+4. Phase 4: Integrate frontend with backend
+5. Phase 5: Testing and refinement
+6. Phase 6: Update deployment configuration
+
+## Success Criteria
+- All existing features work in new implementation
+- Improved API response times
+- Modern, responsive UI
+- Maintainable codebase
+- Successful Docker deployment
+

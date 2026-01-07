@@ -1,0 +1,345 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Set up project configuration files",
+        "status": "done",
+        "description": "Create initial configuration files including requirements.txt, package.json, vite.config.js, tailwind.config.js, and environment variable templates for FastAPI and React setup.",
+        "dependencies": [],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:05:48.059Z"
+      },
+      {
+        "id": "2",
+        "title": "Create FastAPI application structure",
+        "status": "done",
+        "description": "Set up main.py with FastAPI app instance, CORS middleware, static files mounting, and basic routing structure. Create app/api directory structure for organizing endpoints.",
+        "dependencies": [
+          "1"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:05:58.756Z"
+      },
+      {
+        "id": "3",
+        "title": "Migrate database utilities to async pattern",
+        "status": "done",
+        "description": "Convert sqlite3_utilities.py to use async/await pattern with aiosqlite. Update all database read/write operations to be async compatible.",
+        "dependencies": [
+          "1"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:06:01.021Z"
+      },
+      {
+        "id": "4",
+        "title": "Create Pydantic models for API requests/responses",
+        "status": "done",
+        "description": "Define Pydantic models for all API endpoints including Chassis, Card, Port, License, Sensor, Performance metrics, and configuration models.",
+        "dependencies": [
+          "2"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:04.703Z"
+      },
+      {
+        "id": "5",
+        "title": "Migrate chassis endpoints to FastAPI",
+        "status": "done",
+        "description": "Convert GET /chassisDetails route to GET /api/chassis endpoint with proper async handling, error handling, and JSON response format.",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:11.259Z"
+      },
+      {
+        "id": "6",
+        "title": "Migrate card endpoints to FastAPI",
+        "status": "done",
+        "description": "Convert GET /cardDetails route to GET /api/cards endpoint with async database operations and standardized JSON responses.",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:14.650Z"
+      },
+      {
+        "id": "7",
+        "title": "Migrate port, license, and sensor endpoints to FastAPI",
+        "status": "done",
+        "description": "Convert GET /portDetails, GET /licenseDetails, and GET /sensorInformation routes to FastAPI endpoints (/api/ports, /api/licenses, /api/sensors).",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:19.200Z"
+      },
+      {
+        "id": "8",
+        "title": "Migrate configuration and tag management endpoints",
+        "status": "done",
+        "description": "Convert POST /uploader, POST /setPollingIntervals, POST /addTags, POST /removeTags endpoints to FastAPI with proper request validation.",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:27.787Z"
+      },
+      {
+        "id": "9",
+        "title": "Migrate performance metrics and polling endpoints",
+        "status": "done",
+        "description": "Convert GET /lineChartPerfMetrics, POST /getLogs, and GET /pollLatestData/{category} endpoints to FastAPI with async support.",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:09:40.800Z"
+      },
+      {
+        "id": "10",
+        "title": "Set up React + Vite frontend project",
+        "status": "done",
+        "description": "Initialize React project with Vite, configure Tailwind CSS, set up shadcn/ui components library, create src directory structure, and configure path aliases.",
+        "dependencies": [
+          "1"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:12:02.973Z"
+      },
+      {
+        "id": "11",
+        "title": "Create API client and state management",
+        "status": "done",
+        "description": "Set up axios instance for API calls, create React context providers for global state, implement error handling middleware, and create custom hooks for API calls.",
+        "dependencies": [
+          "10"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:12:20.580Z"
+      },
+      {
+        "id": "12",
+        "title": "Build reusable UI components with shadcn/ui",
+        "status": "done",
+        "description": "Create and configure shadcn/ui components including Table, Dialog, Button, Input, Select, Tabs, Toast, and Card components. Set up component library structure.",
+        "dependencies": [
+          "10"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:12:54.814Z"
+      },
+      {
+        "id": "13",
+        "title": "Implement Chassis Details page",
+        "status": "done",
+        "description": "Create React component for chassis details with data table, filtering, sorting, tag management, and refresh functionality. Integrate with /api/chassis endpoint.",
+        "dependencies": [
+          "11",
+          "12",
+          "5"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:13:56.395Z"
+      },
+      {
+        "id": "14",
+        "title": "Implement Card, Port, License, and Sensor pages",
+        "status": "done",
+        "description": "Create React components for card details, port details, license details, and sensor information pages with tables and filtering capabilities.",
+        "dependencies": [
+          "11",
+          "12",
+          "6",
+          "7"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:14:21.065Z"
+      },
+      {
+        "id": "15",
+        "title": "Implement Performance Metrics page with charts",
+        "status": "done",
+        "description": "Create performance metrics page with Recharts integration, line charts for CPU and memory utilization, chassis selector, and real-time data updates.",
+        "dependencies": [
+          "11",
+          "12",
+          "9"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:14:32.235Z"
+      },
+      {
+        "id": "16",
+        "title": "Implement Configuration and Settings pages",
+        "status": "done",
+        "description": "Create upload configuration page and settings page for polling intervals. Implement form validation and error handling.",
+        "dependencies": [
+          "11",
+          "12",
+          "8"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:14:47.600Z"
+      },
+      {
+        "id": "17",
+        "title": "Set up routing and navigation",
+        "status": "done",
+        "description": "Configure React Router with all routes, create navigation component, implement layout wrapper, and handle route transitions.",
+        "dependencies": [
+          "13",
+          "14",
+          "15",
+          "16"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:14:48.710Z"
+      },
+      {
+        "id": "18",
+        "title": "Update Docker configuration",
+        "status": "done",
+        "description": "Update Dockerfile to build and serve frontend static files, create docker-compose.yml for development, and ensure all services work together.",
+        "dependencies": [
+          "17"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:20:28.637Z"
+      },
+      {
+        "id": "19",
+        "title": "Testing and bug fixes",
+        "status": "done",
+        "description": "Test all endpoints, verify frontend-backend integration, fix any bugs, ensure data persistence works correctly, and verify all existing functionality is preserved.",
+        "dependencies": [
+          "17",
+          "18"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:20:40.506Z"
+      },
+      {
+        "id": "20",
+        "title": "Update documentation and deployment guide",
+        "status": "done",
+        "description": "Update README.md with new setup instructions, document API endpoints, create deployment guide, and update any relevant documentation.",
+        "dependencies": [
+          "19"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:20:56.235Z"
+      },
+      {
+        "id": "21",
+        "title": "Create project structure documentation",
+        "status": "done",
+        "description": "Create comprehensive documentation explaining the FastAPI project structure, directory organization, and how to run the application locally.",
+        "dependencies": [
+          "20"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:18:35.931Z"
+      },
+      {
+        "id": "22",
+        "title": "Create Docker build and deployment documentation",
+        "status": "done",
+        "description": "Create detailed documentation for building Docker images for Linux, running containers, and deploying the application in production environments.",
+        "dependencies": [
+          "18",
+          "20"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T01:18:37.231Z"
+      },
+      {
+        "id": "23",
+        "title": "Add color coding for Card State in Chassis and Cards views",
+        "status": "done",
+        "description": "Implement color coding for Card State column: green for 'UP' state, red for 'DOWN' state in both Chassis and Cards views.",
+        "dependencies": [
+          "14"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:17:05.805Z"
+      },
+      {
+        "id": "24",
+        "title": "Add color coding for Link State in Ports view",
+        "status": "done",
+        "description": "Implement color coding for Link State column: green for 'UP', red for 'DOWN', and orange/yellow/pink for other states based on the Link State string value.",
+        "dependencies": [
+          "14"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:17:05.809Z"
+      },
+      {
+        "id": "25",
+        "title": "Add color coding for License Status",
+        "status": "done",
+        "description": "Implement color coding for License Status column: red for Status not equal to 'Active'.",
+        "dependencies": [
+          "14"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:21:04.641Z"
+      },
+      {
+        "id": "26",
+        "title": "Add Export to Excel (CSV) functionality to all table pages",
+        "status": "done",
+        "description": "Add 'Export to Excel' button on all table pages (Chassis, Cards, Ports, Licenses, Sensors) to export data as CSV files.",
+        "dependencies": [
+          "14"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:21:04.642Z"
+      },
+      {
+        "id": "27",
+        "title": "Combine Config and Settings tabs into a single page",
+        "status": "done",
+        "description": "Merge ConfigPage and SettingsPage into a single unified page with tabs for Chassis Configuration and Polling Settings.",
+        "dependencies": [
+          "16"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:45:00.000Z"
+      },
+      {
+        "id": "28",
+        "title": "Implement dark mode theme with professional SaaS dashboard colors",
+        "status": "done",
+        "description": "Apply dark mode theme across the application with professional SaaS dashboard color scheme (dark backgrounds, good contrast, modern blue accents).",
+        "dependencies": [
+          "10"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T02:45:00.000Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2026-01-07T02:45:00.000Z",
+      "taskCount": 28,
+      "completedCount": 28,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}
