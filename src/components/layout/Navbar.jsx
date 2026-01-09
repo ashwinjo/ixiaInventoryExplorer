@@ -1,5 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
+
+// Import logo - Place your logo file (logo.svg, logo.png, etc.) in src/assets/
+// Then uncomment and update the import path below:
+// import logoImage from '@/assets/logo.svg'
+// Or if using a public folder: <img src="/logo.svg" alt="Ixia Logo" />
 
 const navigation = [
   { name: 'Chassis', href: '/chassis', color: 'cyan' },
@@ -8,74 +14,137 @@ const navigation = [
   { name: 'Licenses', href: '/licenses', color: 'amber' },
   { name: 'Sensors', href: '/sensors', color: 'emerald' },
   { name: 'Performance', href: '/performance', color: 'rose' },
-  { name: 'Add/Delete Chassis', href: '/config', color: 'sky' },
 ]
 
-// Obsidian Intelligence color palette for navigation
+const configNavItem = { name: 'Add/Delete Chassis', href: '/config', color: 'sky' }
+
+// Bright, vibrant color palette for navigation with enhanced visibility
 const colorClasses = {
   cyan: {
-    active: 'text-cyan-400 border-cyan-400',
-    inactive: 'text-cyan-500/60 hover:text-cyan-400 hover:border-cyan-400/50'
+    active: 'text-cyan-200 border-cyan-200 bg-cyan-500/25 font-bold',
+    inactive: 'text-cyan-300/95 hover:text-cyan-200 hover:border-cyan-200 hover:bg-cyan-500/15'
   },
   teal: {
-    active: 'text-teal-400 border-teal-400',
-    inactive: 'text-teal-500/60 hover:text-teal-400 hover:border-teal-400/50'
+    active: 'text-teal-200 border-teal-200 bg-teal-500/25 font-bold',
+    inactive: 'text-teal-300/95 hover:text-teal-200 hover:border-teal-200 hover:bg-teal-500/15'
   },
   violet: {
-    active: 'text-violet-400 border-violet-400',
-    inactive: 'text-violet-500/60 hover:text-violet-400 hover:border-violet-400/50'
+    active: 'text-violet-200 border-violet-200 bg-violet-500/25 font-bold',
+    inactive: 'text-violet-300/95 hover:text-violet-200 hover:border-violet-200 hover:bg-violet-500/15'
   },
   amber: {
-    active: 'text-amber-400 border-amber-400',
-    inactive: 'text-amber-500/60 hover:text-amber-400 hover:border-amber-400/50'
+    active: 'text-amber-200 border-amber-200 bg-amber-500/25 font-bold',
+    inactive: 'text-amber-300/95 hover:text-amber-200 hover:border-amber-200 hover:bg-amber-500/15'
   },
   emerald: {
-    active: 'text-emerald-400 border-emerald-400',
-    inactive: 'text-emerald-500/60 hover:text-emerald-400 hover:border-emerald-400/50'
+    active: 'text-emerald-200 border-emerald-200 bg-emerald-500/25 font-bold',
+    inactive: 'text-emerald-300/95 hover:text-emerald-200 hover:border-emerald-200 hover:bg-emerald-500/15'
   },
   rose: {
-    active: 'text-rose-400 border-rose-400',
-    inactive: 'text-rose-500/60 hover:text-rose-400 hover:border-rose-400/50'
+    active: 'text-rose-200 border-rose-200 bg-rose-500/25 font-bold',
+    inactive: 'text-rose-300/95 hover:text-rose-200 hover:border-rose-200 hover:bg-rose-500/15'
   },
   sky: {
-    active: 'text-sky-400 border-sky-400',
-    inactive: 'text-sky-500/60 hover:text-sky-400 hover:border-sky-400/50'
+    active: 'text-sky-200 border-sky-200 bg-sky-500/25 font-bold',
+    inactive: 'text-sky-300/95 hover:text-sky-200 hover:border-sky-200 hover:bg-sky-500/15'
   },
 }
 
 function Navbar() {
   const location = useLocation()
+  const [logoError, setLogoError] = useState(false)
 
   return (
     <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-              Ixia Inventory Explorer
+            <Link to="/" className="flex items-center space-x-3 group">
+              {/* Logo - Place your logo file at: public/logo.svg or src/assets/logo.svg */}
+              {/* If using public folder: src="/logo.svg" */}
+              {/* If using src/assets: import logoImage from '@/assets/logo.svg' then src={logoImage} */}
+              <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+                {logoError ? (
+                  <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-cyan-400 to-teal-400 rounded-lg font-bold text-white text-xl shadow-lg hover:shadow-xl transition-all"
+                       style={{ boxShadow: '0 0 15px rgba(34, 211, 238, 0.6)' }}>
+                    IX
+                  </div>
+                ) : (
+                  <img 
+                    src="/logo.svg" 
+                    alt="Ixia Logo" 
+                    className="w-full h-full object-contain brightness-110 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] hover:brightness-125 transition-all"
+                    style={{ imageRendering: 'auto' }}
+                    onError={() => setLogoError(true)}
+                  />
+                )}
+              </div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-cyan-200 to-teal-200 bg-clip-text text-transparent group-hover:from-cyan-100 group-hover:to-teal-100 transition-all drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
+                Ixia Inventory Explorer
+              </span>
             </Link>
             <div className="flex space-x-1">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href || 
-                  (item.href === '/chassis' && location.pathname === '/') ||
-                  (item.href === '/config' && location.pathname === '/settings')
+                  (item.href === '/chassis' && location.pathname === '/')
                 const colors = colorClasses[item.color]
+                
+                // Define glow effect styles for active items
+                const glowStyles = {
+                  cyan: { boxShadow: '0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.3)' },
+                  teal: { boxShadow: '0 0 15px rgba(20, 184, 166, 0.6), 0 0 30px rgba(20, 184, 166, 0.3)' },
+                  violet: { boxShadow: '0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.3)' },
+                  amber: { boxShadow: '0 0 15px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.3)' },
+                  emerald: { boxShadow: '0 0 15px rgba(16, 185, 129, 0.6), 0 0 30px rgba(16, 185, 129, 0.3)' },
+                  rose: { boxShadow: '0 0 15px rgba(251, 113, 133, 0.6), 0 0 30px rgba(251, 113, 133, 0.3)' },
+                  sky: { boxShadow: '0 0 15px rgba(14, 165, 233, 0.6), 0 0 30px rgba(14, 165, 233, 0.3)' },
+                }
+                
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      "px-3 py-2 text-sm font-medium transition-all duration-200 border-b-2 rounded-t-md",
+                      "px-4 py-2 text-sm font-semibold transition-all duration-200 border-b-2 rounded-t-md",
+                      "hover:scale-105 hover:shadow-lg hover:brightness-110",
                       isActive
-                        ? `${colors.active} bg-white/5`
-                        : `${colors.inactive} border-transparent hover:bg-white/5`
+                        ? colors.active
+                        : `${colors.inactive} border-transparent`
                     )}
+                    style={isActive ? glowStyles[item.color] : {}}
                   >
                     {item.name}
                   </Link>
                 )
               })}
             </div>
+          </div>
+          
+          {/* Add/Delete Chassis on the right */}
+          <div className="flex items-center">
+            {(() => {
+              const isActive = location.pathname === configNavItem.href || location.pathname === '/settings'
+              const colors = colorClasses[configNavItem.color]
+              const glowStyles = {
+                sky: { boxShadow: '0 0 15px rgba(14, 165, 233, 0.6), 0 0 30px rgba(14, 165, 233, 0.3)' },
+              }
+              
+              return (
+                <Link
+                  to={configNavItem.href}
+                  className={cn(
+                    "px-4 py-2 text-sm font-semibold transition-all duration-200 border-b-2 rounded-t-md",
+                    "hover:scale-105 hover:shadow-lg hover:brightness-110",
+                    isActive
+                      ? colors.active
+                      : `${colors.inactive} border-transparent`
+                  )}
+                  style={isActive ? glowStyles.sky : {}}
+                >
+                  {configNavItem.name}
+                </Link>
+              )
+            })()}
           </div>
         </div>
       </div>

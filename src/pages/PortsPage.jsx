@@ -3,6 +3,7 @@ import { useApi, useMutation } from '@/hooks/use-api'
 import { getPorts, pollPorts } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
 
@@ -25,22 +26,130 @@ function PortsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sortColumn, setSortColumn] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
+  
+  // Column-based filters
+  const [filters, setFilters] = useState({
+    chassisIp: '',
+    typeOfChassis: '',
+    cardNumber: '',
+    portNumber: '',
+    linkState: '',
+    owner: '',
+    speed: '',
+    type: '',
+    transceiverModel: '',
+    transceiverManufacturer: ''
+  })
 
   const portsList = data?.ports || []
 
-  const filteredPorts = useMemo(() => {
-    if (!searchTerm) return portsList
-    
-    const term = searchTerm.toLowerCase()
-    return portsList.filter((port) => {
-      return (
-        port.chassisIp?.toLowerCase().includes(term) ||
-        port.owner?.toLowerCase().includes(term) ||
-        port.linkState?.toLowerCase().includes(term) ||
-        port.transceiverModel?.toLowerCase().includes(term)
-      )
+  // Get unique values for each column
+  const columnValues = useMemo(() => {
+    const values = {
+      chassisIp: new Set(),
+      typeOfChassis: new Set(),
+      cardNumber: new Set(),
+      portNumber: new Set(),
+      linkState: new Set(),
+      owner: new Set(),
+      speed: new Set(),
+      type: new Set(),
+      transceiverModel: new Set(),
+      transceiverManufacturer: new Set()
+    }
+
+    portsList.forEach((port) => {
+      if (port.chassisIp) values.chassisIp.add(port.chassisIp)
+      if (port.typeOfChassis && port.typeOfChassis !== 'NA') values.typeOfChassis.add(port.typeOfChassis)
+      if (port.cardNumber !== undefined && port.cardNumber !== null && port.cardNumber !== 'NA') values.cardNumber.add(port.cardNumber.toString())
+      if (port.portNumber !== undefined && port.portNumber !== null && port.portNumber !== 'NA') values.portNumber.add(port.portNumber.toString())
+      if (port.linkState && port.linkState !== 'NA') values.linkState.add(port.linkState)
+      if (port.owner && port.owner !== 'NA') values.owner.add(port.owner)
+      if (port.speed && port.speed !== 'NA') values.speed.add(port.speed)
+      if (port.type && port.type !== 'NA') values.type.add(port.type)
+      if (port.transceiverModel && port.transceiverModel !== 'NA') values.transceiverModel.add(port.transceiverModel)
+      if (port.transceiverManufacturer && port.transceiverManufacturer !== 'NA') values.transceiverManufacturer.add(port.transceiverManufacturer)
     })
-  }, [portsList, searchTerm])
+
+    return Object.fromEntries(
+      Object.entries(values).map(([key, set]) => [key, Array.from(set).sort()])
+    )
+  }, [portsList])
+
+  // Filter ports based on column filters and search term
+  const filteredPorts = useMemo(() => {
+    let filtered = portsList
+
+    // Apply column-based filters (AND logic)
+    Object.entries(filters).forEach(([column, filterValue]) => {
+      if (filterValue && filterValue !== '') {
+        filtered = filtered.filter((port) => {
+          switch (column) {
+            case 'chassisIp':
+              return port.chassisIp === filterValue
+            case 'typeOfChassis':
+              return port.typeOfChassis === filterValue
+            case 'cardNumber':
+              return port.cardNumber !== null && port.cardNumber !== undefined && port.cardNumber?.toString() === filterValue
+            case 'portNumber':
+              return port.portNumber !== null && port.portNumber !== undefined && port.portNumber?.toString() === filterValue
+            case 'linkState':
+              return port.linkState === filterValue
+            case 'owner':
+              return port.owner === filterValue
+            case 'speed':
+              return port.speed === filterValue
+            case 'type':
+              return port.type === filterValue
+            case 'transceiverModel':
+              return port.transceiverModel === filterValue
+            case 'transceiverManufacturer':
+              return port.transceiverManufacturer === filterValue
+            default:
+              return true
+          }
+        })
+      }
+    })
+
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((port) => {
+        return (
+          port.chassisIp?.toLowerCase().includes(term) ||
+          port.owner?.toLowerCase().includes(term) ||
+          port.linkState?.toLowerCase().includes(term) ||
+          port.transceiverModel?.toLowerCase().includes(term)
+        )
+      })
+    }
+
+    return filtered
+  }, [portsList, filters, searchTerm])
+
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value === 'all' ? '' : value
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setFilters({
+      chassisIp: '',
+      typeOfChassis: '',
+      cardNumber: '',
+      portNumber: '',
+      linkState: '',
+      owner: '',
+      speed: '',
+      type: '',
+      transceiverModel: '',
+      transceiverManufacturer: ''
+    })
+    setSearchTerm('')
+  }
 
   const sortedPorts = useMemo(() => {
     if (!sortColumn) return filteredPorts
@@ -125,8 +234,8 @@ function PortsPage() {
     const exportData = sortedPorts.map(port => ({
       chassisIp: port.chassisIp,
       typeOfChassis: port.typeOfChassis,
-      cardNumber: port.cardNumber,
-      portNumber: port.portNumber,
+      cardNumber: port.cardNumber ?? 'N/A',
+      portNumber: port.portNumber ?? 'N/A',
       linkState: port.linkState,
       owner: port.owner,
       speed: port.speed,
@@ -180,14 +289,143 @@ function PortsPage() {
 
       <Card>
         <CardHeader>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by IP, Owner, Link State, Transceiver..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by IP, Owner, Link State, Transceiver..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {(Object.values(filters).some(f => f !== '') || searchTerm) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="whitespace-nowrap"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+            
+            {/* Column-based filter dropdowns */}
+            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
+              <Select
+                value={filters.chassisIp || 'all'}
+                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis IP"
+              >
+                <option value="all">Select All (IP)</option>
+                {columnValues.chassisIp.map((ip) => (
+                  <option key={ip} value={ip}>{ip}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.typeOfChassis || 'all'}
+                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis Type"
+              >
+                <option value="all">Select All (Type)</option>
+                {columnValues.typeOfChassis.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.cardNumber || 'all'}
+                onChange={(e) => handleFilterChange('cardNumber', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Card Number"
+              >
+                <option value="all">Select All (Card)</option>
+                {columnValues.cardNumber.map((num) => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.portNumber || 'all'}
+                onChange={(e) => handleFilterChange('portNumber', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Port Number"
+              >
+                <option value="all">Select All (Port)</option>
+                {columnValues.portNumber.map((num) => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.linkState || 'all'}
+                onChange={(e) => handleFilterChange('linkState', e.target.value)}
+                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Link State"
+              >
+                <option value="all">Select All (State)</option>
+                {columnValues.linkState.map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.owner || 'all'}
+                onChange={(e) => handleFilterChange('owner', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Owner"
+              >
+                <option value="all">Select All (Owner)</option>
+                {columnValues.owner.map((owner) => (
+                  <option key={owner} value={owner}>{owner}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.speed || 'all'}
+                onChange={(e) => handleFilterChange('speed', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Speed"
+              >
+                <option value="all">Select All (Speed)</option>
+                {columnValues.speed.map((speed) => (
+                  <option key={speed} value={speed}>{speed}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.type || 'all'}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Type"
+              >
+                <option value="all">Select All (Type)</option>
+                {columnValues.type.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.transceiverModel || 'all'}
+                onChange={(e) => handleFilterChange('transceiverModel', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Transceiver Model"
+              >
+                <option value="all">Select All (Model)</option>
+                {columnValues.transceiverModel.map((model) => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.transceiverManufacturer || 'all'}
+                onChange={(e) => handleFilterChange('transceiverManufacturer', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Transceiver Manufacturer"
+              >
+                <option value="all">Select All (Mfr)</option>
+                {columnValues.transceiverManufacturer.map((mfr) => (
+                  <option key={mfr} value={mfr}>{mfr}</option>
+                ))}
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -239,8 +477,8 @@ function PortsPage() {
                     <TableRow key={`${port.chassisIp}-${port.cardNumber}-${port.portNumber}-${idx}`}>
                       <TableCell className="font-medium">{port.chassisIp}</TableCell>
                       <TableCell>{port.typeOfChassis}</TableCell>
-                      <TableCell>{port.cardNumber}</TableCell>
-                      <TableCell>{port.portNumber}</TableCell>
+                      <TableCell>{port.cardNumber ?? 'N/A'}</TableCell>
+                      <TableCell>{port.portNumber ?? 'N/A'}</TableCell>
                       <TableCell>
                         {(() => {
                           const linkState = port.linkState?.toUpperCase() || ''

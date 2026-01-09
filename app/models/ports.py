@@ -9,8 +9,8 @@ class PortResponse(BaseModel):
     """Port details response model"""
     chassisIp: str = Field(..., description="Chassis IP address")
     typeOfChassis: str = Field(..., description="Type of chassis")
-    cardNumber: int = Field(..., description="Card number")
-    portNumber: int = Field(..., description="Port number")
+    cardNumber: Optional[int] = Field(None, description="Card number")
+    portNumber: Optional[int] = Field(None, description="Port number")
     linkState: str = Field(..., description="Link state")
     phyMode: str = Field(..., description="Physical mode")
     transceiverModel: str = Field(..., description="Transceiver model")
@@ -18,9 +18,9 @@ class PortResponse(BaseModel):
     owner: str = Field(..., description="Port owner")
     speed: str = Field(..., description="Port speed")
     type: str = Field(..., description="Port type")
-    totalPorts: int = Field(..., description="Total ports")
-    ownedPorts: int = Field(..., description="Owned ports")
-    freePorts: int = Field(..., description="Free ports")
+    totalPorts: Optional[int] = Field(None, description="Total ports")
+    ownedPorts: Optional[int] = Field(None, description="Owned ports")
+    freePorts: Optional[int] = Field(None, description="Free ports")
     transmitState: str = Field(..., description="Transmit state")
     lastUpdatedAt_UTC: str = Field(..., description="Last update timestamp in UTC")
 

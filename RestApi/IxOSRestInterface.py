@@ -79,7 +79,8 @@ class IxRestSession(object):
             'username': username,
             'password': password,
             'rememberMe': False,
-            'resetWeakPassword': False
+            'resetWeakPassword': False,
+            'ignorePolicy': True
         }
         response = self.http_request(
             'POST',

@@ -8,7 +8,7 @@ from app.database import read_data_from_database
 router = APIRouter(prefix="/api/sensors", tags=["sensors"])
 
 
-@router.get("/", response_model=SensorListResponse)
+@router.get("", response_model=SensorListResponse)
 async def get_sensors():
     """Get sensor details"""
     try:

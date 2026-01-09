@@ -1,0 +1,50 @@
+# Ignore files for Google Cloud deployments
+# Similar to .gitignore but for gcloud commands
+
+# Node modules (we rebuild in Docker)
+node_modules/
+
+# Python virtual environments
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Local development
+.env.local
+.env.development.local
+*.log
+
+# Build artifacts (rebuilt in Docker)
+dist/
+
+# Testing
+*.test.js
+*.spec.js
+coverage/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Task management
+.taskmaster/
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+

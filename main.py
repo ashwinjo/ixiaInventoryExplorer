@@ -10,18 +10,44 @@ load_dotenv()
 app = FastAPI(
     title="Ixia Inventory Explorer",
     version="2.0.0",
-    description="FastAPI-based Ixia Inventory Explorer"
+    description="FastAPI-based Ixia Inventory Explorer",
+    # IMPORTANT: Disable redirect_slashes to prevent 307 redirects
+    # that break reverse proxy/ngrok setups (the redirect URL contains 
+    # the internal server address which clients can't reach)
+    redirect_slashes=False
 )
 
-# CORS configuration
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS configuration - Deployment Agnostic
+# =========================================
+# In production (Cloud Run, etc.), frontend and API are served from the same origin,
+# so CORS is not needed. However, we enable it for:
+# - Local development (frontend on :5173, API on :3000)
+# - ngrok tunneling
+# - Any other cross-origin scenarios
+#
+# Set CORS_ORIGINS="*" to allow all origins, or specify specific origins
+cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+
+if cors_origins_env == "*":
+    # Allow all origins (useful for development and flexible deployments)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,  # Cannot use credentials with allow_origins=["*"]
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    # Use specific origins from environment variable
+    cors_origins_list = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins_list,
+        allow_origin_regex=r"https?://.*\.ngrok(-free)?\.app|https?://.*\.ngrok\.io|http://localhost:\d+|http://127\.0\.0\.1:\d+|https?://.*\.run\.app",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Mount frontend static files (built React app)
 if os.path.exists("dist"):
@@ -81,6 +107,8 @@ app.include_router(logs.router)
 if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", 3000))
+    # Cloud Run uses PORT=8080 by default, but support any port
+    port = int(os.getenv("PORT", 8080))
+    print(f"Starting server on {host}:{port}")
     uvicorn.run(app, host=host, port=port)
 

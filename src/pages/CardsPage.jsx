@@ -3,6 +3,7 @@ import { useApi, useMutation } from '@/hooks/use-api'
 import { getCards, pollCards, addTags, removeTags } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -38,22 +39,120 @@ function CardsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sortColumn, setSortColumn] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
+  
+  // Column-based filters
+  const [filters, setFilters] = useState({
+    chassisIp: '',
+    chassisType: '',
+    cardNumber: '',
+    serialNumber: '',
+    cardType: '',
+    cardState: '',
+    numberOfPorts: '',
+    tags: ''
+  })
 
   const cardsList = data?.cards || []
 
-  const filteredCards = useMemo(() => {
-    if (!searchTerm) return cardsList
-    
-    const term = searchTerm.toLowerCase()
-    return cardsList.filter((card) => {
-      return (
-        card.chassisIp?.toLowerCase().includes(term) ||
-        card.serialNumber?.toLowerCase().includes(term) ||
-        card.cardType?.toLowerCase().includes(term) ||
-        card.chassisType?.toLowerCase().includes(term)
-      )
+  // Get unique values for each column
+  const columnValues = useMemo(() => {
+    const values = {
+      chassisIp: new Set(),
+      chassisType: new Set(),
+      cardNumber: new Set(),
+      serialNumber: new Set(),
+      cardType: new Set(),
+      cardState: new Set(),
+      numberOfPorts: new Set(),
+      tags: new Set()
+    }
+
+    cardsList.forEach((card) => {
+      if (card.chassisIp) values.chassisIp.add(card.chassisIp)
+      if (card.chassisType && card.chassisType !== 'NA') values.chassisType.add(card.chassisType)
+      if (card.cardNumber !== undefined && card.cardNumber !== null && card.cardNumber !== 'NA') values.cardNumber.add(card.cardNumber.toString())
+      if (card.serialNumber && card.serialNumber !== 'NA') values.serialNumber.add(card.serialNumber)
+      if (card.cardType && card.cardType !== 'NA') values.cardType.add(card.cardType)
+      if (card.cardState && card.cardState !== 'NA') values.cardState.add(card.cardState)
+      if (card.numberOfPorts !== undefined && card.numberOfPorts !== null && card.numberOfPorts !== 'NA') values.numberOfPorts.add(card.numberOfPorts.toString())
+      if (card.tags && card.tags.length > 0) {
+        card.tags.forEach(tag => values.tags.add(tag))
+      }
     })
-  }, [cardsList, searchTerm])
+
+    return Object.fromEntries(
+      Object.entries(values).map(([key, set]) => [key, Array.from(set).sort()])
+    )
+  }, [cardsList])
+
+  // Filter cards based on column filters and search term
+  const filteredCards = useMemo(() => {
+    let filtered = cardsList
+
+    // Apply column-based filters (AND logic)
+    Object.entries(filters).forEach(([column, filterValue]) => {
+      if (filterValue && filterValue !== '') {
+        filtered = filtered.filter((card) => {
+          switch (column) {
+            case 'chassisIp':
+              return card.chassisIp === filterValue
+            case 'chassisType':
+              return card.chassisType === filterValue
+            case 'cardNumber':
+              return card.cardNumber !== null && card.cardNumber !== undefined && card.cardNumber?.toString() === filterValue
+            case 'serialNumber':
+              return card.serialNumber === filterValue
+            case 'cardType':
+              return card.cardType === filterValue
+            case 'cardState':
+              return card.cardState === filterValue
+            case 'numberOfPorts':
+              return card.numberOfPorts !== null && card.numberOfPorts !== undefined && card.numberOfPorts?.toString() === filterValue
+            case 'tags':
+              return card.tags && card.tags.includes(filterValue)
+            default:
+              return true
+          }
+        })
+      }
+    })
+
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((card) => {
+        return (
+          card.chassisIp?.toLowerCase().includes(term) ||
+          card.serialNumber?.toLowerCase().includes(term) ||
+          card.cardType?.toLowerCase().includes(term) ||
+          card.chassisType?.toLowerCase().includes(term)
+        )
+      })
+    }
+
+    return filtered
+  }, [cardsList, filters, searchTerm])
+
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value === 'all' ? '' : value
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setFilters({
+      chassisIp: '',
+      chassisType: '',
+      cardNumber: '',
+      serialNumber: '',
+      cardType: '',
+      cardState: '',
+      numberOfPorts: '',
+      tags: ''
+    })
+    setSearchTerm('')
+  }
 
   const sortedCards = useMemo(() => {
     if (!sortColumn) return filteredCards
@@ -177,11 +276,11 @@ function CardsPage() {
     const exportData = sortedCards.map(card => ({
       chassisIp: card.chassisIp,
       chassisType: card.chassisType,
-      cardNumber: card.cardNumber,
+      cardNumber: card.cardNumber ?? 'N/A',
       serialNumber: card.serialNumber,
       cardType: card.cardType,
       cardState: card.cardState,
-      numberOfPorts: card.numberOfPorts,
+      numberOfPorts: card.numberOfPorts ?? 'N/A',
       tags: card.tags && card.tags.length > 0 ? card.tags.join('; ') : 'No tags',
     }))
 
@@ -230,14 +329,121 @@ function CardsPage() {
 
       <Card>
         <CardHeader>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by IP, Serial Number, Card Type..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by IP, Serial Number, Card Type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {(Object.values(filters).some(f => f !== '') || searchTerm) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="whitespace-nowrap"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+            
+            {/* Column-based filter dropdowns */}
+            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
+              <Select
+                value={filters.chassisIp || 'all'}
+                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis IP"
+              >
+                <option value="all">Select All (IP)</option>
+                {columnValues.chassisIp.map((ip) => (
+                  <option key={ip} value={ip}>{ip}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.chassisType || 'all'}
+                onChange={(e) => handleFilterChange('chassisType', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis Type"
+              >
+                <option value="all">Select All (Type)</option>
+                {columnValues.chassisType.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.cardNumber || 'all'}
+                onChange={(e) => handleFilterChange('cardNumber', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Card Number"
+              >
+                <option value="all">Select All (Card #)</option>
+                {columnValues.cardNumber.map((num) => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.serialNumber || 'all'}
+                onChange={(e) => handleFilterChange('serialNumber', e.target.value)}
+                className="min-w-[130px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Serial Number"
+              >
+                <option value="all">Select All (Serial)</option>
+                {columnValues.serialNumber.map((sn) => (
+                  <option key={sn} value={sn}>{sn}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.cardType || 'all'}
+                onChange={(e) => handleFilterChange('cardType', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Card Type"
+              >
+                <option value="all">Select All (Card Type)</option>
+                {columnValues.cardType.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.cardState || 'all'}
+                onChange={(e) => handleFilterChange('cardState', e.target.value)}
+                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Card State"
+              >
+                <option value="all">Select All (State)</option>
+                {columnValues.cardState.map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.numberOfPorts || 'all'}
+                onChange={(e) => handleFilterChange('numberOfPorts', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Number of Ports"
+              >
+                <option value="all">Select All (Ports)</option>
+                {columnValues.numberOfPorts.map((ports) => (
+                  <option key={ports} value={ports}>{ports}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.tags || 'all'}
+                onChange={(e) => handleFilterChange('tags', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Tags"
+              >
+                <option value="all">Select All (Tags)</option>
+                {columnValues.tags.map((tag) => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -282,7 +488,7 @@ function CardsPage() {
                     <TableRow key={`${card.chassisIp}-${card.cardNumber}`}>
                       <TableCell className="font-medium">{card.chassisIp}</TableCell>
                       <TableCell>{card.chassisType}</TableCell>
-                      <TableCell>{card.cardNumber}</TableCell>
+                      <TableCell>{card.cardNumber ?? 'N/A'}</TableCell>
                       <TableCell>{card.serialNumber}</TableCell>
                       <TableCell>{card.cardType}</TableCell>
                       <TableCell>
@@ -298,7 +504,7 @@ function CardsPage() {
                           {card.cardState}
                         </span>
                       </TableCell>
-                      <TableCell>{card.numberOfPorts}</TableCell>
+                      <TableCell>{card.numberOfPorts ?? 'N/A'}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {card.tags && card.tags.length > 0 ? (

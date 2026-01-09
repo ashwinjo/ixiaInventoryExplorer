@@ -330,12 +330,23 @@
         ],
         "subtasks": [],
         "updatedAt": "2026-01-07T02:45:00.000Z"
+      },
+      {
+        "id": "29",
+        "title": "Convert data poller to async/await pattern for concurrent chassis data fetching",
+        "status": "in-progress",
+        "description": "Refactor data_poller.py to use async/await patterns so that fetching chassis data for all chassis (chassis, cards, ports, licenses) happens concurrently instead of sequentially. This will improve performance by fetching data from multiple chassis in parallel.",
+        "dependencies": [
+          "3"
+        ],
+        "subtasks": [],
+        "updatedAt": "2026-01-07T03:00:00.000Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-07T02:45:00.000Z",
-      "taskCount": 28,
+      "lastModified": "2026-01-07T03:00:00.000Z",
+      "taskCount": 29,
       "completedCount": 28,
       "tags": [
         "master"

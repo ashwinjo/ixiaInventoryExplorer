@@ -13,7 +13,6 @@ sleep 15
 python3 data_poller.py --category=cards &
 python3 data_poller.py --category=ports &
 python3 data_poller.py --category=licensing --interval=120 &
-python3 data_poller.py --category=data_purge --interval=86400 &
 
 # Start FastAPI application
 echo "Starting FastAPI application..."

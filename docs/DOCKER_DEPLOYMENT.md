@@ -1,544 +1,418 @@
-# Docker Build and Deployment Guide
-
-## Table of Contents
-1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Building Docker Image for Linux](#building-docker-image-for-linux)
-4. [Running the Container](#running-the-container)
-5. [Docker Compose](#docker-compose)
-6. [Production Deployment](#production-deployment)
-7. [Troubleshooting](#troubleshooting)
+# Docker Deployment Guide for Ixia Inventory Explorer
 
 ## Overview
 
-This guide explains how to build and deploy the Ixia Inventory Explorer application using Docker on a Linux system. The application consists of:
-- FastAPI backend (Python)
-- React frontend (Node.js/Vite)
-- SQLite database
+This guide explains how to build and run the Ixia Inventory Explorer application as a Docker container. The Docker image supports both **Mac (ARM64)** and **Linux (AMD64)** platforms.
 
 ## Prerequisites
 
-- Docker Engine 20.10+ installed on Linux
-- Docker Compose (optional, for multi-container setup)
-- Git (to clone repository)
-- At least 2GB free disk space
+- Docker Desktop (for Mac/Windows) or Docker Engine (for Linux)
+- Docker Buildx (included with Docker Desktop, or install separately for Linux)
+- At least 2GB of free disk space
+- Port 3000 available on your host machine
 
-**Verify Docker Installation:**
-```bash
-docker --version
-docker-compose --version
-```
+## Building the Docker Image
 
-## Building Docker Image for Linux
+### Multi-Platform Build (Recommended)
 
-### Step 1: Prepare the Build Context
-
-Ensure you're in the project root directory:
+To build for both Mac (ARM64) and Linux (AMD64):
 
 ```bash
-cd /path/to/ixiaInventoryExplorer
+# Create a new buildx builder (if not already created)
+docker buildx create --name multiplatform --use
+
+# Build for multiple platforms
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t ixia-inventory-explorer:latest \
+  --load \
+  .
 ```
 
-### Step 2: Build Frontend (Production Build)
+**Note:** The `--load` flag loads the image for your current platform. To push to a registry, use `--push` instead.
 
-First, build the React frontend for production:
+### Using the Build Script
+
+We provide a convenient build script:
 
 ```bash
-# Install dependencies and build
-npm install
-npm run build
+chmod +x build-docker.sh
+./build-docker.sh
 ```
 
-This creates a `dist/` directory with optimized production files.
+### Single Platform Build
 
-### Step 3: Update Dockerfile (if needed)
-
-The Dockerfile should:
-1. Use Python base image
-2. Install system dependencies
-3. Install Python dependencies
-4. Copy application files
-5. Build frontend (or copy pre-built files)
-6. Expose port 3000
-7. Run FastAPI with Uvicorn
-
-**Example Multi-stage Dockerfile:**
-
-```dockerfile
-# Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# Stage 2: Python backend
-FROM python:3.8-slim-buster
-WORKDIR /python-docker
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    procps \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-ENV PIP_ROOT_USER_ACTION=ignore
-
-# Copy application files
-COPY . .
-
-# Copy built frontend from builder stage
-COPY --from=frontend-builder /app/dist ./dist
-
-# Expose port
-EXPOSE 3000
-
-# Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
-```
-
-### Step 4: Build Docker Image
-
-**For Linux AMD64 (x86_64):**
-```bash
-docker build -t ixia-inventory-explorer:latest .
-```
-
-**For Linux ARM64:**
+#### For Mac (ARM64/M1/M2):
 ```bash
 docker build --platform linux/arm64 -t ixia-inventory-explorer:latest .
 ```
 
-**For specific architecture:**
+#### For Linux (AMD64):
 ```bash
 docker build --platform linux/amd64 -t ixia-inventory-explorer:latest .
 ```
 
-**With build arguments:**
-```bash
-docker build \
-  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-  --build-arg VERSION=2.0.0 \
-  -t ixia-inventory-explorer:latest \
-  .
-```
-
-**Verify Image:**
-```bash
-docker images | grep ixia-inventory-explorer
-```
-
 ## Running the Container
 
-### Basic Run Command
+### Using Docker Compose (Recommended)
+
+1. **Create data directory:**
+   ```bash
+   mkdir -p data logs
+   ```
+
+2. **Start the container:**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **View logs:**
+   ```bash
+   docker-compose logs -f
+   ```
+
+4. **Stop the container:**
+   ```bash
+   docker-compose down
+   ```
+
+### Using Docker Run
+
+#### Basic Run Command
 
 ```bash
+# Create data directory
+mkdir -p data
+
+# Run the container
 docker run -d \
-  --name ixia-explorer \
+  --name ixia-inventory-explorer \
   -p 3000:3000 \
-  ixia-inventory-explorer:latest
-```
-
-### Run with Volume for Data Persistence
-
-```bash
-# Create volume for database persistence
-docker volume create ixia-data
-
-# Run container with volume
-docker run -d \
-  --name ixia-explorer \
-  -p 3000:3000 \
-  -v ixia-data:/python-docker \
-  ixia-inventory-explorer:latest
-```
-
-### Run with Environment Variables
-
-```bash
-docker run -d \
-  --name ixia-explorer \
-  -p 3000:3000 \
-  -e PORT=3000 \
-  -e DEBUG=False \
-  -e DATABASE_PATH=/python-docker/inventory.db \
-  -e CORS_ORIGINS=http://localhost:3000 \
-  -v ixia-data:/python-docker \
-  ixia-inventory-explorer:latest
-```
-
-### Run with Environment File
-
-Create `.env` file:
-```env
-PORT=3000
-DEBUG=False
-DATABASE_PATH=/python-docker/inventory.db
-CORS_ORIGINS=http://localhost:3000
-```
-
-Run with env file:
-```bash
-docker run -d \
-  --name ixia-explorer \
-  -p 3000:3000 \
-  --env-file .env \
-  -v ixia-data:/python-docker \
-  ixia-inventory-explorer:latest
-```
-
-### Run with Host Network (Linux only)
-
-```bash
-docker run -d \
-  --name ixia-explorer \
-  --network host \
-  ixia-inventory-explorer:latest
-```
-
-## Docker Compose
-
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ixia-inventory-explorer
-    ports:
-      - "3000:3000"
-    volumes:
-      - ixia-data:/python-docker
-      - ./inventory.db:/python-docker/inventory.db  # Optional: mount specific file
-    environment:
-      - PORT=3000
-      - DEBUG=False
-      - DATABASE_PATH=/python-docker/inventory.db
-      - CORS_ORIGINS=http://localhost:3000
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-volumes:
-  ixia-data:
-    driver: local
-```
-
-**Start with Docker Compose:**
-```bash
-docker-compose up -d
-```
-
-**View logs:**
-```bash
-docker-compose logs -f
-```
-
-**Stop:**
-```bash
-docker-compose down
-```
-
-**Rebuild:**
-```bash
-docker-compose up -d --build
-```
-
-## Production Deployment
-
-### 1. Build Production Image
-
-```bash
-docker build \
-  --platform linux/amd64 \
-  -t ixia-inventory-explorer:v2.0.0 \
-  -t ixia-inventory-explorer:latest \
-  .
-```
-
-### 2. Tag for Registry (Optional)
-
-```bash
-docker tag ixia-inventory-explorer:latest \
-  your-registry.com/ixia-inventory-explorer:latest
-```
-
-### 3. Push to Registry (Optional)
-
-```bash
-docker push your-registry.com/ixia-inventory-explorer:latest
-```
-
-### 4. Run Production Container
-
-```bash
-docker run -d \
-  --name ixia-explorer-prod \
+  -v $(pwd)/data:/app/data \
   --restart unless-stopped \
-  -p 80:3000 \
-  -v ixia-data:/python-docker \
-  --env-file .env.production \
   ixia-inventory-explorer:latest
 ```
 
-### 5. Using Systemd Service
+#### Complete Run Command with All Options
 
-Create `/etc/systemd/system/ixia-explorer.service`:
+```bash
+# Create directories
+mkdir -p data logs
 
-```ini
-[Unit]
-Description=Ixia Inventory Explorer
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=10
-ExecStart=/usr/bin/docker run --rm \
-  --name ixia-explorer \
+# Run the container
+docker run -d \
+  --name ixia-inventory-explorer \
   -p 3000:3000 \
-  -v ixia-data:/python-docker \
-  --env-file /opt/ixia-explorer/.env \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/logs:/app/logs \
+  -e PORT=3000 \
+  -e DATABASE_PATH=/app/data/inventory.db \
+  -e CORS_ORIGINS=http://localhost:3000 \
+  --restart unless-stopped \
+  --health-cmd "curl -f http://localhost:3000/health || exit 1" \
+  --health-interval=30s \
+  --health-timeout=10s \
+  --health-retries=3 \
   ixia-inventory-explorer:latest
-ExecStop=/usr/bin/docker stop ixia-explorer
-
-[Install]
-WantedBy=multi-user.target
 ```
 
-**Enable and start:**
+## Volume Mounts
+
+The application uses volume mounts to persist data:
+
+### Required Volumes
+
+1. **Database Directory** (`/app/data`)
+   - **Host Path:** `./data` (or your custom path)
+   - **Container Path:** `/app/data`
+   - **Purpose:** Stores the SQLite database (`inventory.db`)
+   - **Example:**
+     ```bash
+     -v $(pwd)/data:/app/data
+     ```
+
+### Optional Volumes
+
+2. **Logs Directory** (`/app/logs`)
+   - **Host Path:** `./logs` (or your custom path)
+   - **Container Path:** `/app/logs`
+   - **Purpose:** Application logs
+   - **Example:**
+     ```bash
+     -v $(pwd)/logs:/app/logs
+     ```
+
+### Volume Mount Examples
+
+#### Linux/Mac:
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable ixia-explorer
-sudo systemctl start ixia-explorer
-sudo systemctl status ixia-explorer
+# Using absolute path
+-v /home/user/ixia-data:/app/data
+
+# Using relative path
+-v ./data:/app/data
+
+# Using Docker volume
+docker volume create ixia-data
+-v ixia-data:/app/data
 ```
 
-## Container Management Commands
+#### Windows (PowerShell):
+```powershell
+# Using absolute path
+-v C:\Users\YourName\ixia-data:/app/data
 
-### View Running Containers
+# Using relative path
+-v ${PWD}/data:/app/data
+```
+
+## Accessing the Application
+
+Once the container is running:
+
+- **Web UI:** Open your browser and navigate to `http://localhost:3000`
+- **API Documentation:** `http://localhost:3000/docs`
+- **Health Check:** `http://localhost:3000/health`
+
+## Environment Variables
+
+You can customize the application behavior using environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Port on which the application runs |
+| `HOST` | `0.0.0.0` | Host address to bind to |
+| `DATABASE_PATH` | `/app/data/inventory.db` | Path to SQLite database |
+| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
+| `DEBUG` | `False` | Enable debug mode |
+
+### Setting Environment Variables
+
+#### Docker Run:
 ```bash
-docker ps
-docker ps -a  # Include stopped containers
+-e PORT=8080 \
+-e CORS_ORIGINS=http://localhost:8080,http://example.com
 ```
+
+#### Docker Compose:
+```yaml
+environment:
+  - PORT=8080
+  - CORS_ORIGINS=http://localhost:8080
+```
+
+## Container Management
 
 ### View Logs
 ```bash
-docker logs ixia-explorer
-docker logs -f ixia-explorer  # Follow logs
-docker logs --tail 100 ixia-explorer  # Last 100 lines
-```
+# Docker Compose
+docker-compose logs -f
 
-### Execute Commands in Container
-```bash
-docker exec -it ixia-explorer bash
-docker exec ixia-explorer python init_db.py
+# Docker Run
+docker logs -f ixia-inventory-explorer
 ```
 
 ### Stop Container
 ```bash
-docker stop ixia-explorer
+# Docker Compose
+docker-compose down
+
+# Docker Run
+docker stop ixia-inventory-explorer
 ```
 
 ### Start Container
 ```bash
-docker start ixia-explorer
+# Docker Compose
+docker-compose up -d
+
+# Docker Run
+docker start ixia-inventory-explorer
 ```
 
 ### Remove Container
 ```bash
-docker rm ixia-explorer
-docker rm -f ixia-explorer  # Force remove running container
+# Docker Compose
+docker-compose down -v  # -v removes volumes
+
+# Docker Run
+docker rm -f ixia-inventory-explorer
 ```
 
-### Remove Image
+### Execute Commands in Container
 ```bash
-docker rmi ixia-inventory-explorer:latest
+docker exec -it ixia-inventory-explorer bash
 ```
 
-### Clean Up
-```bash
-# Remove stopped containers
-docker container prune
+## Database Management
 
-# Remove unused images
-docker image prune
+### Database Location
 
-# Remove unused volumes (careful!)
-docker volume prune
-```
-
-## Volume Management
-
-### List Volumes
-```bash
-docker volume ls
-```
-
-### Inspect Volume
-```bash
-docker volume inspect ixia-data
-```
+The database is stored at `/app/data/inventory.db` inside the container, which is mounted to your host machine at `./data/inventory.db`.
 
 ### Backup Database
+
 ```bash
-docker run --rm \
-  -v ixia-data:/data \
-  -v $(pwd):/backup \
-  alpine tar czf /backup/ixia-backup-$(date +%Y%m%d).tar.gz -C /data .
+# Copy database from container
+docker cp ixia-inventory-explorer:/app/data/inventory.db ./backup-inventory.db
+
+# Or directly from mounted volume
+cp ./data/inventory.db ./backup-inventory.db
 ```
 
 ### Restore Database
-```bash
-docker run --rm \
-  -v ixia-data:/data \
-  -v $(pwd):/backup \
-  alpine tar xzf /backup/ixia-backup-YYYYMMDD.tar.gz -C /data
-```
 
-## Network Configuration
-
-### Create Custom Network
 ```bash
-docker network create ixia-network
-```
+# Copy database to container
+docker cp ./backup-inventory.db ixia-inventory-explorer:/app/data/inventory.db
 
-### Run Container on Custom Network
-```bash
-docker run -d \
-  --name ixia-explorer \
-  --network ixia-network \
-  -p 3000:3000 \
-  ixia-inventory-explorer:latest
-```
-
-### Connect Container to Network
-```bash
-docker network connect ixia-network ixia-explorer
+# Or directly to mounted volume
+cp ./backup-inventory.db ./data/inventory.db
 ```
 
 ## Troubleshooting
 
 ### Container Won't Start
 
-**Check logs:**
-```bash
-docker logs ixia-explorer
-```
+1. **Check logs:**
+   ```bash
+   docker logs ixia-inventory-explorer
+   ```
 
-**Common issues:**
-1. Port already in use: Change port mapping `-p 3001:3000`
-2. Permission issues: Check volume permissions
-3. Missing dependencies: Verify Dockerfile includes all requirements
+2. **Verify port availability:**
+   ```bash
+   # Linux/Mac
+   lsof -i :3000
+   
+   # Windows
+   netstat -ano | findstr :3000
+   ```
+
+3. **Check volume permissions:**
+   ```bash
+   ls -la ./data
+   ```
 
 ### Database Issues
 
-**Initialize database:**
-```bash
-docker exec ixia-explorer python init_db.py
-```
+1. **Database not persisting:**
+   - Ensure volume mount is correct
+   - Check volume permissions
+   - Verify database path in environment variables
 
-**Check database file:**
-```bash
-docker exec ixia-explorer ls -la /python-docker/inventory.db
-```
-
-### Frontend Not Loading
-
-**Verify build:**
-```bash
-docker exec ixia-explorer ls -la /python-docker/dist
-```
-
-**Check FastAPI static files:**
-```bash
-docker exec ixia-explorer curl http://localhost:3000/static/
-```
+2. **Database locked errors:**
+   - Ensure only one container instance is running
+   - Check for background processes accessing the database
 
 ### Performance Issues
 
-**Monitor resource usage:**
+1. **High memory usage:**
+   - Multiple polling processes run in background
+   - Consider adjusting polling intervals in the UI
+
+2. **Slow startup:**
+   - First startup initializes the database
+   - Subsequent starts are faster
+
+## Production Deployment
+
+### Using Docker Compose
+
+1. **Update docker-compose.yml** with production settings:
+   ```yaml
+   environment:
+     - PORT=3000
+     - DEBUG=False
+     - CORS_ORIGINS=https://yourdomain.com
+   ```
+
+2. **Use named volumes for data persistence:**
+   ```yaml
+   volumes:
+     - ixia-data:/app/data
+   
+   volumes:
+     ixia-data:
+       driver: local
+   ```
+
+3. **Add reverse proxy (nginx/traefik)** for SSL termination
+
+### Using Docker Swarm/Kubernetes
+
+The container is compatible with orchestration platforms. Ensure:
+- Volume mounts are configured correctly
+- Health checks are enabled
+- Resource limits are set appropriately
+
+## Building for Production
+
+### Build and Push to Registry
+
 ```bash
-docker stats ixia-explorer
+# Build and tag
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t your-registry/ixia-inventory-explorer:latest \
+  -t your-registry/ixia-inventory-explorer:v2.0.0 \
+  --push \
+  .
 ```
 
-**Limit resources:**
+### Pull and Run
+
 ```bash
-docker run -d \
-  --name ixia-explorer \
-  --memory="512m" \
-  --cpus="1.0" \
-  -p 3000:3000 \
-  ixia-inventory-explorer:latest
+docker pull your-registry/ixia-inventory-explorer:latest
+docker run -d -p 3000:3000 -v ./data:/app/data your-registry/ixia-inventory-explorer:latest
 ```
 
-### Build Failures
+## Architecture
 
-**Clear build cache:**
-```bash
-docker builder prune
-```
+The Docker image contains:
 
-**Build without cache:**
-```bash
-docker build --no-cache -t ixia-inventory-explorer:latest .
-```
+1. **Frontend:** React application built with Vite, served as static files
+2. **Backend:** FastAPI application running on Uvicorn
+3. **Background Workers:** Multiple Python processes for polling different data categories:
+   - Chassis polling
+   - Cards polling
+   - Ports polling
+   - Licensing polling
+   - Performance metrics polling
+   - Sensors polling
+   - Data purge
+4. **Database:** SQLite database stored in mounted volume
 
 ## Security Considerations
 
-1. **Don't run as root** - Use non-root user in Dockerfile
-2. **Use secrets** - Don't hardcode credentials
-3. **Keep images updated** - Regularly update base images
-4. **Scan images** - Use `docker scan` to check vulnerabilities
-5. **Limit resources** - Set memory and CPU limits
-6. **Use read-only filesystem** where possible
+1. **Non-root user:** Container runs as `appuser` (UID 1000)
+2. **Minimal base image:** Uses slim Python image
+3. **No secrets in image:** Use environment variables or secrets management
+4. **Volume permissions:** Ensure proper file permissions on mounted volumes
 
-## Example Production Deployment Script
+## Quick Start for End Customers
 
+### Step 1: Create Required Directories
 ```bash
-#!/bin/bash
-# deploy.sh
-
-set -e
-
-IMAGE_NAME="ixia-inventory-explorer"
-VERSION="2.0.0"
-CONTAINER_NAME="ixia-explorer"
-
-echo "Building Docker image..."
-docker build --platform linux/amd64 -t ${IMAGE_NAME}:${VERSION} .
-
-echo "Stopping existing container..."
-docker stop ${CONTAINER_NAME} || true
-docker rm ${CONTAINER_NAME} || true
-
-echo "Starting new container..."
-docker run -d \
-  --name ${CONTAINER_NAME} \
-  --restart unless-stopped \
-  -p 3000:3000 \
-  -v ixia-data:/python-docker \
-  --env-file .env.production \
-  ${IMAGE_NAME}:${VERSION}
-
-echo "Deployment complete!"
-docker ps | grep ${CONTAINER_NAME}
+mkdir -p data logs
 ```
 
-Make executable and run:
+### Step 2: Run with Docker Compose (Easiest)
 ```bash
-chmod +x deploy.sh
-./deploy.sh
+docker-compose up -d
 ```
 
+### Step 3: Access the Application
+Open your browser to: `http://localhost:3000`
+
+### Step 4: Stop the Application
+```bash
+docker-compose down
+```
+
+## Support
+
+For issues or questions:
+- Check application logs: `docker logs ixia-inventory-explorer`
+- Review health endpoint: `http://localhost:3000/health`
+- Verify volume mounts are working correctly
+- Ensure port 3000 is not already in use

@@ -3,6 +3,7 @@ import { useApi, useMutation } from '@/hooks/use-api'
 import { getLicenses, pollLicenses } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
 
@@ -25,22 +26,132 @@ function LicensesPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sortColumn, setSortColumn] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
+  
+  // Column-based filters
+  const [filters, setFilters] = useState({
+    chassisIp: '',
+    typeOfChassis: '',
+    hostId: '',
+    partNumber: '',
+    activationCode: '',
+    quantity: '',
+    description: '',
+    maintenanceDate: '',
+    expiryDate: '',
+    status: ''
+  })
 
   const licensesList = data?.licenses || []
 
-  const filteredLicenses = useMemo(() => {
-    if (!searchTerm) return licensesList
-    
-    const term = searchTerm.toLowerCase()
-    return licensesList.filter((license) => {
-      return (
-        license.chassisIp?.toLowerCase().includes(term) ||
-        license.partNumber?.toLowerCase().includes(term) ||
-        license.description?.toLowerCase().includes(term) ||
-        license.hostId?.toLowerCase().includes(term)
-      )
+  // Get unique values for each column
+  const columnValues = useMemo(() => {
+    const values = {
+      chassisIp: new Set(),
+      typeOfChassis: new Set(),
+      hostId: new Set(),
+      partNumber: new Set(),
+      activationCode: new Set(),
+      quantity: new Set(),
+      description: new Set(),
+      maintenanceDate: new Set(),
+      expiryDate: new Set(),
+      status: new Set()
+    }
+
+    licensesList.forEach((license) => {
+      if (license.chassisIp) values.chassisIp.add(license.chassisIp)
+      if (license.typeOfChassis && license.typeOfChassis !== 'NA') values.typeOfChassis.add(license.typeOfChassis)
+      if (license.hostId && license.hostId !== 'NA') values.hostId.add(license.hostId)
+      if (license.partNumber && license.partNumber !== 'NA') values.partNumber.add(license.partNumber)
+      if (license.activationCode && license.activationCode !== 'NA') values.activationCode.add(license.activationCode)
+      if (license.quantity !== undefined && license.quantity !== 'NA') values.quantity.add(license.quantity.toString())
+      if (license.description && license.description !== 'NA') values.description.add(license.description)
+      if (license.maintenanceDate && license.maintenanceDate !== 'NA') values.maintenanceDate.add(license.maintenanceDate)
+      if (license.expiryDate && license.expiryDate !== 'NA') values.expiryDate.add(license.expiryDate)
+      const status = license.isExpired === 'True' || license.isExpired === true ? 'Expired' : 'Active'
+      values.status.add(status)
     })
-  }, [licensesList, searchTerm])
+
+    return Object.fromEntries(
+      Object.entries(values).map(([key, set]) => [key, Array.from(set).sort()])
+    )
+  }, [licensesList])
+
+  // Filter licenses based on column filters and search term
+  const filteredLicenses = useMemo(() => {
+    let filtered = licensesList
+
+    // Apply column-based filters (AND logic)
+    Object.entries(filters).forEach(([column, filterValue]) => {
+      if (filterValue && filterValue !== '') {
+        filtered = filtered.filter((license) => {
+          switch (column) {
+            case 'chassisIp':
+              return license.chassisIp === filterValue
+            case 'typeOfChassis':
+              return license.typeOfChassis === filterValue
+            case 'hostId':
+              return license.hostId === filterValue
+            case 'partNumber':
+              return license.partNumber === filterValue
+            case 'activationCode':
+              return license.activationCode === filterValue
+            case 'quantity':
+              return license.quantity?.toString() === filterValue
+            case 'description':
+              return license.description === filterValue
+            case 'maintenanceDate':
+              return license.maintenanceDate === filterValue
+            case 'expiryDate':
+              return license.expiryDate === filterValue
+            case 'status':
+              const status = license.isExpired === 'True' || license.isExpired === true ? 'Expired' : 'Active'
+              return status === filterValue
+            default:
+              return true
+          }
+        })
+      }
+    })
+
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((license) => {
+        return (
+          license.chassisIp?.toLowerCase().includes(term) ||
+          license.partNumber?.toLowerCase().includes(term) ||
+          license.description?.toLowerCase().includes(term) ||
+          license.hostId?.toLowerCase().includes(term)
+        )
+      })
+    }
+
+    return filtered
+  }, [licensesList, filters, searchTerm])
+
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value === 'all' ? '' : value
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setFilters({
+      chassisIp: '',
+      typeOfChassis: '',
+      hostId: '',
+      partNumber: '',
+      activationCode: '',
+      quantity: '',
+      description: '',
+      maintenanceDate: '',
+      expiryDate: '',
+      status: ''
+    })
+    setSearchTerm('')
+  }
 
   const sortedLicenses = useMemo(() => {
     if (!sortColumn) return filteredLicenses
@@ -186,14 +297,143 @@ function LicensesPage() {
 
       <Card>
         <CardHeader>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by IP, Part Number, Description, Host ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by IP, Part Number, Description, Host ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {(Object.values(filters).some(f => f !== '') || searchTerm) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="whitespace-nowrap"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+            
+            {/* Column-based filter dropdowns */}
+            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
+              <Select
+                value={filters.chassisIp || 'all'}
+                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis IP"
+              >
+                <option value="all">Select All (IP)</option>
+                {columnValues.chassisIp.map((ip) => (
+                  <option key={ip} value={ip}>{ip}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.typeOfChassis || 'all'}
+                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis Type"
+              >
+                <option value="all">Select All (Type)</option>
+                {columnValues.typeOfChassis.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.hostId || 'all'}
+                onChange={(e) => handleFilterChange('hostId', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Host ID"
+              >
+                <option value="all">Select All (Host ID)</option>
+                {columnValues.hostId.map((hostId) => (
+                  <option key={hostId} value={hostId}>{hostId}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.partNumber || 'all'}
+                onChange={(e) => handleFilterChange('partNumber', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Part Number"
+              >
+                <option value="all">Select All (Part #)</option>
+                {columnValues.partNumber.map((part) => (
+                  <option key={part} value={part}>{part}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.activationCode || 'all'}
+                onChange={(e) => handleFilterChange('activationCode', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Activation Code"
+              >
+                <option value="all">Select All (Code)</option>
+                {columnValues.activationCode.map((code) => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.quantity || 'all'}
+                onChange={(e) => handleFilterChange('quantity', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Quantity"
+              >
+                <option value="all">Select All (Qty)</option>
+                {columnValues.quantity.map((qty) => (
+                  <option key={qty} value={qty}>{qty}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.description || 'all'}
+                onChange={(e) => handleFilterChange('description', e.target.value)}
+                className="min-w-[150px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Description"
+              >
+                <option value="all">Select All (Desc)</option>
+                {columnValues.description.map((desc) => (
+                  <option key={desc} value={desc}>{desc}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.maintenanceDate || 'all'}
+                onChange={(e) => handleFilterChange('maintenanceDate', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Maintenance Date"
+              >
+                <option value="all">Select All (Maint)</option>
+                {columnValues.maintenanceDate.map((date) => (
+                  <option key={date} value={date}>{date}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.expiryDate || 'all'}
+                onChange={(e) => handleFilterChange('expiryDate', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Expiry Date"
+              >
+                <option value="all">Select All (Expiry)</option>
+                {columnValues.expiryDate.map((date) => (
+                  <option key={date} value={date}>{date}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.status || 'all'}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Status"
+              >
+                <option value="all">Select All (Status)</option>
+                {columnValues.status.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

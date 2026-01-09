@@ -9,7 +9,7 @@ from app.database import read_data_from_database, read_tags
 router = APIRouter(prefix="/api/chassis", tags=["chassis"])
 
 
-@router.get("/", response_model=ChassisListResponse)
+@router.get("", response_model=ChassisListResponse)
 async def get_chassis():
     """Get chassis summary details"""
     try:

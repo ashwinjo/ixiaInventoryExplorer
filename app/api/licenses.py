@@ -8,7 +8,7 @@ from app.database import read_data_from_database
 router = APIRouter(prefix="/api/licenses", tags=["licenses"])
 
 
-@router.get("/", response_model=LicenseListResponse)
+@router.get("", response_model=LicenseListResponse)
 async def get_licenses():
     """Get license details"""
     try:

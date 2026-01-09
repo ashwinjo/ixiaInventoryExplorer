@@ -3,6 +3,7 @@ import { useApi, useMutation } from '@/hooks/use-api'
 import { getSensors, pollSensors } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
 
@@ -25,21 +26,105 @@ function SensorsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sortColumn, setSortColumn] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
+  
+  // Column-based filters
+  const [filters, setFilters] = useState({
+    chassisIp: '',
+    typeOfChassis: '',
+    sensorType: '',
+    sensorName: '',
+    sensorValue: '',
+    unit: ''
+  })
 
   const sensorsList = data?.sensors || []
 
-  const filteredSensors = useMemo(() => {
-    if (!searchTerm) return sensorsList
-    
-    const term = searchTerm.toLowerCase()
-    return sensorsList.filter((sensor) => {
-      return (
-        sensor.chassisIp?.toLowerCase().includes(term) ||
-        sensor.sensorName?.toLowerCase().includes(term) ||
-        sensor.sensorType?.toLowerCase().includes(term)
-      )
+  // Get unique values for each column
+  const columnValues = useMemo(() => {
+    const values = {
+      chassisIp: new Set(),
+      typeOfChassis: new Set(),
+      sensorType: new Set(),
+      sensorName: new Set(),
+      sensorValue: new Set(),
+      unit: new Set()
+    }
+
+    sensorsList.forEach((sensor) => {
+      if (sensor.chassisIp) values.chassisIp.add(sensor.chassisIp)
+      if (sensor.typeOfChassis && sensor.typeOfChassis !== 'NA') values.typeOfChassis.add(sensor.typeOfChassis)
+      if (sensor.sensorType && sensor.sensorType !== 'NA') values.sensorType.add(sensor.sensorType)
+      if (sensor.sensorName && sensor.sensorName !== 'NA') values.sensorName.add(sensor.sensorName)
+      if (sensor.sensorValue !== undefined && sensor.sensorValue !== 'NA') values.sensorValue.add(sensor.sensorValue.toString())
+      if (sensor.unit && sensor.unit !== 'NA') values.unit.add(sensor.unit)
     })
-  }, [sensorsList, searchTerm])
+
+    return Object.fromEntries(
+      Object.entries(values).map(([key, set]) => [key, Array.from(set).sort()])
+    )
+  }, [sensorsList])
+
+  // Filter sensors based on column filters and search term
+  const filteredSensors = useMemo(() => {
+    let filtered = sensorsList
+
+    // Apply column-based filters (AND logic)
+    Object.entries(filters).forEach(([column, filterValue]) => {
+      if (filterValue && filterValue !== '') {
+        filtered = filtered.filter((sensor) => {
+          switch (column) {
+            case 'chassisIp':
+              return sensor.chassisIp === filterValue
+            case 'typeOfChassis':
+              return sensor.typeOfChassis === filterValue
+            case 'sensorType':
+              return sensor.sensorType === filterValue
+            case 'sensorName':
+              return sensor.sensorName === filterValue
+            case 'sensorValue':
+              return sensor.sensorValue?.toString() === filterValue
+            case 'unit':
+              return sensor.unit === filterValue
+            default:
+              return true
+          }
+        })
+      }
+    })
+
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((sensor) => {
+        return (
+          sensor.chassisIp?.toLowerCase().includes(term) ||
+          sensor.sensorName?.toLowerCase().includes(term) ||
+          sensor.sensorType?.toLowerCase().includes(term)
+        )
+      })
+    }
+
+    return filtered
+  }, [sensorsList, filters, searchTerm])
+
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value === 'all' ? '' : value
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setFilters({
+      chassisIp: '',
+      typeOfChassis: '',
+      sensorType: '',
+      sensorName: '',
+      sensorValue: '',
+      unit: ''
+    })
+    setSearchTerm('')
+  }
 
   const sortedSensors = useMemo(() => {
     if (!sortColumn) return filteredSensors
@@ -173,14 +258,99 @@ function SensorsPage() {
 
       <Card>
         <CardHeader>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by IP, Sensor Name, Sensor Type..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by IP, Sensor Name, Sensor Type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {(Object.values(filters).some(f => f !== '') || searchTerm) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="whitespace-nowrap"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+            
+            {/* Column-based filter dropdowns */}
+            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
+              <Select
+                value={filters.chassisIp || 'all'}
+                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis IP"
+              >
+                <option value="all">Select All (IP)</option>
+                {columnValues.chassisIp.map((ip) => (
+                  <option key={ip} value={ip}>{ip}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.typeOfChassis || 'all'}
+                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Chassis Type"
+              >
+                <option value="all">Select All (Type)</option>
+                {columnValues.typeOfChassis.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.sensorType || 'all'}
+                onChange={(e) => handleFilterChange('sensorType', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Sensor Type"
+              >
+                <option value="all">Select All (Sensor Type)</option>
+                {columnValues.sensorType.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.sensorName || 'all'}
+                onChange={(e) => handleFilterChange('sensorName', e.target.value)}
+                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Sensor Name"
+              >
+                <option value="all">Select All (Name)</option>
+                {columnValues.sensorName.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.sensorValue || 'all'}
+                onChange={(e) => handleFilterChange('sensorValue', e.target.value)}
+                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Sensor Value"
+              >
+                <option value="all">Select All (Value)</option>
+                {columnValues.sensorValue.map((value) => (
+                  <option key={value} value={value}>{value}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.unit || 'all'}
+                onChange={(e) => handleFilterChange('unit', e.target.value)}
+                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
+                title="Filter by Unit"
+              >
+                <option value="all">Select All (Unit)</option>
+                {columnValues.unit.map((unit) => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

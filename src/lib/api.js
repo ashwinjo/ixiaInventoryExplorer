@@ -1,20 +1,40 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+// DEPLOYMENT-AGNOSTIC API Configuration
+// ====================================
+// Uses relative URLs by default, which works in all deployment scenarios:
+// - Local development (with Vite proxy)
+// - ngrok tunnels
+// - Cloud Run (single container serving frontend + API)
+// - Any other hosting (Kubernetes, VM, etc.)
+//
+// The frontend and API should be served from the SAME origin in production.
+// Vite dev server proxies /api to the backend during development.
+//
+// Override with VITE_API_URL environment variable if you need absolute URLs
+// (e.g., for separate frontend/backend deployments)
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
+
+// Debug: Log the configured base URL on startup
+console.log('[API Config] Base URL:', API_BASE_URL || '(empty - using relative URLs)')
+console.log('[API Config] Window origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A')
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    // Skip ngrok browser warning interstitial (required for ngrok free tier)
+    'ngrok-skip-browser-warning': 'true',
   },
 })
 
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add any auth tokens or headers here if needed
-    console.log('API Request:', config.method?.toUpperCase(), config.url)
+    // Debug: Log full request URL
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url
+    console.log('[API Request]', config.method?.toUpperCase(), fullUrl, '| Base:', config.baseURL || 'none')
     return config
   },
   (error) => {
