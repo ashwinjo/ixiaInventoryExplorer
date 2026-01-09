@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/ThemeContext'
+import { Sun, Moon } from 'lucide-react'
 
 // Import logo - Place your logo file (logo.svg, logo.png, etc.) in src/assets/
 // Then uncomment and update the import path below:
@@ -53,6 +55,7 @@ const colorClasses = {
 function Navbar() {
   const location = useLocation()
   const [logoError, setLogoError] = useState(false)
+  const { theme, toggleTheme, isDark } = useTheme()
 
   return (
     <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
@@ -80,7 +83,7 @@ function Navbar() {
                 )}
               </div>
               <span className="text-3xl font-bold bg-gradient-to-r from-cyan-200 to-teal-200 bg-clip-text text-transparent group-hover:from-cyan-100 group-hover:to-teal-100 transition-all drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
-                Ixia Inventory Explorer
+              Ixia Inventory Explorer
               </span>
             </Link>
             <div className="flex space-x-1">
@@ -120,8 +123,8 @@ function Navbar() {
             </div>
           </div>
           
-          {/* Add/Delete Chassis on the right */}
-          <div className="flex items-center">
+          {/* Add/Delete Chassis and Theme Toggle on the right */}
+          <div className="flex items-center gap-3">
             {(() => {
               const isActive = location.pathname === configNavItem.href || location.pathname === '/settings'
               const colors = colorClasses[configNavItem.color]
@@ -145,6 +148,43 @@ function Navbar() {
                 </Link>
               )
             })()}
+            
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                "relative p-2 rounded-full transition-all duration-300 ease-out",
+                "hover:scale-110 active:scale-95",
+                isDark 
+                  ? "bg-slate-800/80 hover:bg-slate-700 text-amber-400 hover:text-amber-300 shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20" 
+                  : "bg-sky-100 hover:bg-sky-200 text-sky-600 hover:text-sky-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30"
+              )}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <div className="relative w-5 h-5">
+                {/* Sun icon - visible in dark mode */}
+                <Sun 
+                  size={20} 
+                  className={cn(
+                    "absolute inset-0 transition-all duration-300",
+                    isDark 
+                      ? "opacity-100 rotate-0 scale-100" 
+                      : "opacity-0 rotate-90 scale-0"
+                  )}
+                />
+                {/* Moon icon - visible in light mode */}
+                <Moon 
+                  size={20} 
+                  className={cn(
+                    "absolute inset-0 transition-all duration-300",
+                    isDark 
+                      ? "opacity-0 -rotate-90 scale-0" 
+                      : "opacity-100 rotate-0 scale-100"
+                  )}
+                />
+              </div>
+            </button>
           </div>
         </div>
       </div>

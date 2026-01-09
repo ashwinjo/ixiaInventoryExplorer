@@ -114,15 +114,15 @@ function PortsPage() {
 
     // Apply search term filter
     if (searchTerm) {
-      const term = searchTerm.toLowerCase()
+    const term = searchTerm.toLowerCase()
       filtered = filtered.filter((port) => {
-        return (
-          port.chassisIp?.toLowerCase().includes(term) ||
-          port.owner?.toLowerCase().includes(term) ||
-          port.linkState?.toLowerCase().includes(term) ||
-          port.transceiverModel?.toLowerCase().includes(term)
-        )
-      })
+      return (
+        port.chassisIp?.toLowerCase().includes(term) ||
+        port.owner?.toLowerCase().includes(term) ||
+        port.linkState?.toLowerCase().includes(term) ||
+        port.transceiverModel?.toLowerCase().includes(term)
+      )
+    })
     }
 
     return filtered
@@ -291,14 +291,14 @@ function PortsPage() {
         <CardHeader>
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by IP, Owner, Link State, Transceiver..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by IP, Owner, Link State, Transceiver..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
               </div>
               {(Object.values(filters).some(f => f !== '') || searchTerm) && (
                 <Button

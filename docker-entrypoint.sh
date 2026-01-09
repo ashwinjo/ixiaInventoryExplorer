@@ -45,32 +45,32 @@ fi
 # Start background polling processes (only if not in minimal mode)
 if [ "${MINIMAL_MODE:-false}" != "true" ]; then
     echo "[INIT] Starting background polling processes..."
-    python3 /app/data_poller.py --category=chassis &
-    CHASSIS_PID=$!
+python3 /app/data_poller.py --category=chassis &
+CHASSIS_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=cards &
-    CARDS_PID=$!
+python3 /app/data_poller.py --category=cards &
+CARDS_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=ports &
-    PORTS_PID=$!
+python3 /app/data_poller.py --category=ports &
+PORTS_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=licensing &
-    LICENSING_PID=$!
+python3 /app/data_poller.py --category=licensing &
+LICENSING_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=perf &
-    PERF_PID=$!
+python3 /app/data_poller.py --category=perf &
+PERF_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=sensors &
-    SENSORS_PID=$!
+python3 /app/data_poller.py --category=sensors &
+SENSORS_PID=$!
     sleep 1
 
-    python3 /app/data_poller.py --category=data_purge &
-    PURGE_PID=$!
+python3 /app/data_poller.py --category=data_purge &
+PURGE_PID=$!
 
     echo "[INIT] Background polling processes started"
 else

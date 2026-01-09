@@ -1,10 +1,22 @@
 import { useState } from 'react'
 import { useMutation } from '@/hooks/use-api'
-import { uploadConfig, setPollingIntervals } from '@/lib/api/endpoints'
+import { uploadConfig, setPollingIntervals, resetDatabase } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import { Trash2, AlertTriangle } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function ConfigPage() {
   const [configText, setConfigText] = useState('')
@@ -19,11 +31,12 @@ function ConfigPage() {
   })
   const { mutate: uploadMutate, loading: uploadLoading } = useMutation(uploadConfig)
   const { mutate: intervalsMutate, loading: intervalsLoading } = useMutation(setPollingIntervals)
+  const { mutate: resetMutate, loading: resetLoading } = useMutation(resetDatabase)
   const { toast } = useToast()
 
   const handleConfigSubmit = (e) => {
     e.preventDefault()
-    
+
     if (!configText.trim()) {
       toast({
         variant: 'destructive',
@@ -52,6 +65,24 @@ function ConfigPage() {
         },
       }
     )
+  }
+
+  const handleResetDB = () => {
+    resetMutate(null, {
+      onSuccess: () => {
+        toast({
+          title: 'Database Reset',
+          description: 'All records have been successfully deleted',
+        })
+      },
+      onError: (error) => {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.response?.data?.detail || 'Failed to reset database',
+        })
+      }
+    })
   }
 
   const handleIntervalsChange = (field, value) => {
@@ -122,11 +153,44 @@ DELETE,192.168.1.100,admin,password`
     <div className="space-y-8">
       {/* Chassis Configuration Section */}
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-cyan-400">Chassis Configuration</h2>
-          <p className="text-muted-foreground mt-1">
-            Add, delete, or update chassis in the inventory
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-cyan-400">Chassis Configuration</h2>
+            <p className="text-muted-foreground mt-1">
+              Add, delete, or update chassis in the inventory
+            </p>
+          </div>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="gap-2 shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all">
+                <Trash2 size={16} />
+                Reset DB
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-[#0f0f12] border-white/10">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-red-500">
+                  <AlertTriangle size={20} />
+                  Are you absolutely sure?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-400">
+                  This action cannot be undone. This will permanently delete all configured chassis,
+                  inventory records, tags, and performance metrics from the database.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleResetDB}
+                  className="bg-red-600 hover:bg-red-700 text-white border-none"
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? 'Resetting...' : 'Yes, Reset Database'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -140,35 +204,37 @@ DELETE,192.168.1.100,admin,password`
             <CardContent>
               <form onSubmit={handleConfigSubmit} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">
+                  <label className="text-sm font-medium mb-2 block text-slate-300">
                     Configuration (CSV Format)
                   </label>
                   <textarea
                     value={configText}
                     onChange={(e) => setConfigText(e.target.value)}
                     placeholder={exampleConfig}
-                    className="w-full min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="w-full min-h-[200px] rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-slate-200 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all font-mono"
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Operations: ADD, DELETE, UPDATE. Format: operation,ip,username,password
+                  <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-tight">
+                    Operations: <span className="text-cyan-400">ADD</span>, <span className="text-red-400">DELETE</span>, <span className="text-emerald-400">UPDATE</span>. Format: <span className="italic">operation,ip,username,password</span>
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="submit" disabled={uploadLoading}>
+                  <Button type="submit" disabled={uploadLoading} className="bg-cyan-600 hover:bg-cyan-700">
                     {uploadLoading ? 'Uploading...' : 'Upload Configuration'}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setConfigText(exampleConfig)}
+                    className="border-white/10 hover:bg-white/5"
                   >
                     Load Example
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => setConfigText('')}
+                    className="text-slate-400 hover:text-white"
                   >
                     Clear
                   </Button>
@@ -184,27 +250,29 @@ DELETE,192.168.1.100,admin,password`
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">CSV Format:</h3>
-                  <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto">
+                  <h3 className="font-semibold mb-2 text-cyan-400/80 text-xs uppercase tracking-widest">CSV Format:</h3>
+                  <pre className="bg-black/40 border border-white/5 p-4 rounded-xl text-xs overflow-x-auto text-cyan-100/70 font-mono">
                     {exampleConfig}
                   </pre>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Operations:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li><strong>ADD:</strong> Add a new chassis to the inventory</li>
-                    <li><strong>DELETE:</strong> Remove a chassis from the inventory</li>
-                    <li><strong>UPDATE:</strong> Update credentials for an existing chassis</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Fields:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li><strong>operation:</strong> ADD, DELETE, or UPDATE</li>
-                    <li><strong>ip:</strong> Chassis IP address</li>
-                    <li><strong>username:</strong> Username for chassis authentication</li>
-                    <li><strong>password:</strong> Password for chassis authentication</li>
-                  </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Operations:</h3>
+                    <ul className="space-y-1.5 text-xs text-slate-400">
+                      <li className="flex items-center gap-2"><div className="w-1 h-1 bg-cyan-500 rounded-full"></div> <strong>ADD:</strong> New chassis</li>
+                      <li className="flex items-center gap-2"><div className="w-1 h-1 bg-red-500 rounded-full"></div> <strong>DELETE:</strong> Remove chassis</li>
+                      <li className="flex items-center gap-2"><div className="w-1 h-1 bg-emerald-500 rounded-full"></div> <strong>UPDATE:</strong> Credentials</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Fields:</h3>
+                    <ul className="space-y-1.5 text-xs text-slate-400">
+                      <li><strong>operation:</strong> Action to perform</li>
+                      <li><strong>ip:</strong> IP address</li>
+                      <li><strong>username:</strong> Auth user</li>
+                      <li><strong>password:</strong> Auth pass</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -213,7 +281,7 @@ DELETE,192.168.1.100,admin,password`
       </div>
 
       {/* Divider */}
-      <hr className="border-border" />
+      <hr className="border-white/5" />
 
       {/* Polling Settings Section */}
       <div className="space-y-6">
@@ -237,7 +305,7 @@ DELETE,192.168.1.100,admin,password`
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {intervalFields.map((field) => (
                     <div key={field.key} className="space-y-2">
-                      <label className="text-sm font-medium">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                         {field.label}
                       </label>
                       <Input
@@ -245,26 +313,27 @@ DELETE,192.168.1.100,admin,password`
                         min="1"
                         value={intervals[field.key]}
                         onChange={(e) => handleIntervalsChange(field.key, e.target.value)}
+                        className="bg-black/40 border-white/10 focus:ring-teal-500/30"
                         required
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground italic leading-tight">
                         {field.description}
                       </p>
                       {field.key === 'purge' && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          Current: {Math.floor(intervals.purge / 3600)} hours ({intervals.purge} seconds)
+                        <p className="text-[10px] text-teal-400/60 font-mono">
+                          Current: {Math.floor(intervals.purge / 3600)} hours
                         </p>
                       )}
                       {field.key !== 'purge' && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          Current: {intervals[field.key]} seconds ({Math.floor(intervals[field.key] / 60)} minutes)
+                        <p className="text-[10px] text-teal-400/60 font-mono">
+                          Current: {Math.floor(intervals[field.key] / 60)} minutes
                         </p>
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="submit" disabled={intervalsLoading}>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button type="submit" disabled={intervalsLoading} className="bg-teal-600 hover:bg-teal-700">
                     {intervalsLoading ? 'Saving...' : 'Save Settings'}
                   </Button>
                   <Button
@@ -281,6 +350,7 @@ DELETE,192.168.1.100,admin,password`
                         purge: 86400,
                       })
                     }}
+                    className="border-white/10 hover:bg-white/5"
                   >
                     Reset to Defaults
                   </Button>
@@ -294,14 +364,42 @@ DELETE,192.168.1.100,admin,password`
               <CardTitle>Recommended Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 text-sm">
-                <p><strong>Chassis:</strong> 60 seconds (1 minute) - Frequent updates for status monitoring</p>
-                <p><strong>Cards:</strong> 60 seconds (1 minute) - Regular card status checks</p>
-                <p><strong>Ports:</strong> 60 seconds (1 minute) - Monitor port states frequently</p>
-                <p><strong>Sensors:</strong> 60 seconds (1 minute) - Track sensor readings</p>
-                <p><strong>Licensing:</strong> 120 seconds (2 minutes) - Licenses change less frequently</p>
-                <p><strong>Performance:</strong> 60 seconds (1 minute) - Real-time performance monitoring</p>
-                <p><strong>Data Purge:</strong> 86400 seconds (24 hours) - Clean up old performance data daily</p>
+              <div className="space-y-3 text-xs text-slate-400">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Chassis</span>
+                  <span>1 minute</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Cards</span>
+                  <span>1 minute</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Ports</span>
+                  <span>1 minute</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Sensors</span>
+                  <span>1 minute</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Licensing</span>
+                  <span>2 minutes</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-semibold text-teal-400/80">Performance</span>
+                  <span>1 minute</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-teal-400/80">Data Purge</span>
+                  <span>24 hours</span>
+                </div>
+              </div>
+              <div className="mt-6 p-4 rounded-xl bg-teal-500/5 border border-teal-500/10">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-2">Pro Tip</h4>
+                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                  Lower intervals provide more precision but increase Chassis CPU load.
+                  For environments with 50+ chassis, consider balancing intervals based on urgency.
+                </p>
               </div>
             </CardContent>
           </Card>

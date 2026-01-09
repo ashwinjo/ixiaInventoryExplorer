@@ -65,18 +65,18 @@ async def fetch_chassis_summary_for_one(chassis: Dict, retry_count: int = 3) -> 
         print(f"[POLL] Chassis {chassis['ip']} FAILED after {retry_count} attempts. Last error: {type(last_exception).__name__ if last_exception else 'Unknown'}")
         return {
             "chassisIp": chassis["ip"],
-            "chassisSerial#": "NA",
-            "controllerSerial#": "NA",
-            "chassisType": "NA",
-            "physicalCards#": "NA",
-            "chassisStatus": "Not Reachable",
-            "lastUpdatedAt_UTC": "NA",
-            "mem_bytes": "NA", 
-            "mem_bytes_total": "NA", 
-            "cpu_pert_usage": "NA",
-            "os": "NA",
-            "IxOS": "NA",
-            "IxNetwork Protocols": "NA",
+                    "chassisSerial#": "NA",
+                    "controllerSerial#": "NA",
+                    "chassisType": "NA",
+                    "physicalCards#": "NA",
+                    "chassisStatus": "Not Reachable",
+                    "lastUpdatedAt_UTC": "NA",
+                    "mem_bytes": "NA", 
+                    "mem_bytes_total": "NA", 
+                    "cpu_pert_usage": "NA",
+                    "os": "NA",
+                    "IxOS": "NA",
+                    "IxNetwork Protocols": "NA",
             "IxOS REST": "NA"
         }
     
@@ -339,7 +339,7 @@ async def get_perf_metrics():
             table_name="chassis_utilization_details", 
             records=perf_list_details
         )
-
+        
 
 async def delete_half_metric_records_weekly():
     """This method will do periodic cleanup of inventord DB performance metrics data"""
@@ -353,11 +353,11 @@ async def controller(category_of_poll=None):
 
 categoryToFuntionMap = {
     "chassis": get_chassis_summary_data,
-    "cards": get_chassis_card_data,
-    "ports": get_chassis_port_data,
-    "licensing": get_chassis_licensing_data,
-    "sensors": get_sensor_information,
-    "perf": get_perf_metrics,
+                        "cards": get_chassis_card_data,
+                        "ports": get_chassis_port_data,
+                        "licensing": get_chassis_licensing_data,
+                        "sensors": get_sensor_information,
+                        "perf": get_perf_metrics,
     "data_purge": delete_half_metric_records_weekly
 }
 
@@ -367,7 +367,7 @@ categoryToFuntionMap = {
 @click.option('--interval', default="", help='Interval between Polls')
 def start_poller(category, interval): 
     """Since not all the parameters are modified with same interval, this way, we can specify exactly what we want to monitor at what interval
-    Args:
+  Args:
         category (_type_): _description_
         interval (_type_): _description_
     """

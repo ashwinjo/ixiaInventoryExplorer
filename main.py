@@ -104,6 +104,44 @@ app.include_router(tags.router)
 app.include_router(poll.router)
 app.include_router(logs.router)
 
+# ADK Proxy Route
+# ================
+import httpx
+from fastapi import Request, Response
+
+@app.api_route("/adk/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+async def proxy_adk(path: str, request: Request):
+    adk_url = f"http://localhost:8000/{path}"
+    
+    # Get request body
+    body = await request.body()
+    
+    # Forward the request to the ADK agent
+    async with httpx.AsyncClient() as client:
+        # Filter out host header to avoid conflicts
+        headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
+        
+        try:
+            resp = await client.request(
+                method=request.method,
+                url=adk_url,
+                params=request.query_params,
+                headers=headers,
+                content=body,
+                timeout=60.0 # Agent can take time to think
+            )
+            
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers=dict(resp.headers)
+            )
+        except Exception as e:
+            return Response(
+                content=f"ADK Proxy Error: {str(e)}",
+                status_code=502
+            )
+
 if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")

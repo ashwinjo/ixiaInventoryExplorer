@@ -21,11 +21,10 @@ export default defineConfig({
     ],
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
         ws: true,
-        // Handle ngrok-specific headers
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, res) => {
             console.log('Proxy error:', err);
@@ -36,11 +35,21 @@ export default defineConfig({
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
             console.log('Proxying:', req.method, req.url);
-            // Remove ngrok browser warning header
             proxyReq.removeHeader('ngrok-skip-browser-warning');
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Proxy response:', proxyRes.statusCode, req.url);
+        },
+      },
+      '/adk': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/adk/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, res) => {
+            console.log('ADK Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying ADK:', req.method, req.url);
           });
         },
       },

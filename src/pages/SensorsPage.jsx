@@ -94,14 +94,14 @@ function SensorsPage() {
 
     // Apply search term filter
     if (searchTerm) {
-      const term = searchTerm.toLowerCase()
+    const term = searchTerm.toLowerCase()
       filtered = filtered.filter((sensor) => {
-        return (
-          sensor.chassisIp?.toLowerCase().includes(term) ||
-          sensor.sensorName?.toLowerCase().includes(term) ||
-          sensor.sensorType?.toLowerCase().includes(term)
-        )
-      })
+      return (
+        sensor.chassisIp?.toLowerCase().includes(term) ||
+        sensor.sensorName?.toLowerCase().includes(term) ||
+        sensor.sensorType?.toLowerCase().includes(term)
+      )
+    })
     }
 
     return filtered
@@ -260,14 +260,14 @@ function SensorsPage() {
         <CardHeader>
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by IP, Sensor Name, Sensor Type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by IP, Sensor Name, Sensor Type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
               </div>
               {(Object.values(filters).some(f => f !== '') || searchTerm) && (
                 <Button

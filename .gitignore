@@ -41,6 +41,9 @@ build/
 *.sqlite
 *.sqlite3
 
+# Credentials
+credentials.json
+
 # Logs
 *.log
 logs/

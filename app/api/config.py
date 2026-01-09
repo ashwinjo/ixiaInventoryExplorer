@@ -28,6 +28,35 @@ async def get_configured_chassis():
         raise HTTPException(status_code=500, detail=f"Error fetching configured chassis: {str(e)}")
 
 
+@router.get("/credentials")
+async def get_credentials():
+    """
+    Get full credentials including passwords for MCP servers and monitoring tools.
+    
+    WARNING: This endpoint exposes sensitive credentials. 
+    In production, this should be protected with authentication or restricted to localhost only.
+    
+    Returns:
+        List of chassis configurations with ip, username, and password
+    """
+    try:
+        serv_list = await read_username_password_from_database()
+        if serv_list:
+            chassis_data = json.loads(serv_list)
+            return {
+                "success": True,
+                "count": len(chassis_data),
+                "credentials": chassis_data
+            }
+        return {
+            "success": True,
+            "count": 0,
+            "credentials": []
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching credentials: {str(e)}")
+
+
 @router.post("/upload", response_model=ConfigUploadResponse)
 async def upload_config(request: ConfigUploadRequest):
     """Upload configuration"""
@@ -75,3 +104,12 @@ async def set_polling_intervals(request: PollingIntervalsRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating polling intervals: {str(e)}")
 
+@router.delete("/reset")
+async def reset_db():
+    """Reset the entire database"""
+    try:
+        from app.database import reset_database
+        await reset_database()
+        return {"message": "Database reset successfully", "success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resetting database: {str(e)}")

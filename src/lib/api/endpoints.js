@@ -32,6 +32,7 @@ export const removeTags = (data) => api.post('/api/tags/remove', data)
 export const getConfiguredChassis = () => api.get('/api/config/chassis')
 export const uploadConfig = (data) => api.post('/api/config/upload', data)
 export const setPollingIntervals = (data) => api.post('/api/config/polling-intervals', data)
+export const resetDatabase = () => api.delete('/api/config/reset')
 
 // Logs endpoints
 export const collectLogs = (data) => api.post('/api/logs/collect', data)

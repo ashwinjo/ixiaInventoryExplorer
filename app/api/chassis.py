@@ -9,7 +9,7 @@ from app.database import read_data_from_database, read_tags
 router = APIRouter(prefix="/api/chassis", tags=["chassis"])
 
 
-@router.get("", response_model=ChassisListResponse)
+@router.get("")
 async def get_chassis():
     """Get chassis summary details"""
     try:
@@ -54,9 +54,11 @@ async def get_chassis():
                 "cpu_pert_usage": str(record["cpu_pert_usage"]),
                 "os": record["os"]
             }
-            list_of_chassis.append(ChassisResponse(**chassis_data))
+            # Use dict directly (already using field names, not aliases)
+            # This ensures the frontend gets consistent field names
+            list_of_chassis.append(chassis_data)
         
-        return ChassisListResponse(chassis=list_of_chassis, count=len(list_of_chassis))
+        return {"chassis": list_of_chassis, "count": len(list_of_chassis)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching chassis data: {str(e)}")
 

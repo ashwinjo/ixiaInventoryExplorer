@@ -26,8 +26,9 @@ import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
 
 function ChassisPage() {
-  const { data, loading, error, refetch } = useApi(getChassis, [], false)
-  const { data: configuredChassisData, loading: configLoading, refetch: refetchConfig } = useApi(getConfiguredChassis, [], false)
+  // Fetch data immediately on mount
+  const { data, loading, error, refetch } = useApi(getChassis, [], true)
+  const { data: configuredChassisData, loading: configLoading, refetch: refetchConfig } = useApi(getConfiguredChassis, [], true)
   const { mutate: pollMutate } = useMutation(pollChassis)
   const { mutate: addTagsMutate } = useMutation(addTags)
   const { mutate: removeTagsMutate } = useMutation(removeTags)
@@ -58,27 +59,17 @@ function ChassisPage() {
   const hasConfiguredChassis = configuredChassis.length > 0
   const hasChassisData = chassisList.length > 0
 
-  // Load data on mount
+  // Additional logging when data changes
   useEffect(() => {
-    console.log('ChassisPage: Loading chassis data...')
-    refetch()
-      .then((responseData) => {
-        console.log('ChassisPage: Data loaded successfully:', responseData)
-        console.log('ChassisPage: chassisList will be:', responseData?.chassis || [])
-      })
-      .catch((err) => {
-        // Log errors for debugging
-        if (err.response) {
-          console.error('ChassisPage: API Error:', err.response.status, err.response.data)
-        } else if (err.request) {
-          console.error('ChassisPage: Network error - no response from server:', err.message)
-          console.error('ChassisPage: Request details:', err.config?.url)
-        } else {
-          console.error('ChassisPage: Error:', err.message)
-        }
-      })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    console.log('ChassisPage: Data updated:', {
+      chassisCount: chassisList.length,
+      configuredCount: configuredChassis.length,
+      hasChassisData,
+      hasConfiguredChassis,
+      loading,
+      configLoading
+    })
+  }, [chassisList, configuredChassis, hasChassisData, hasConfiguredChassis, loading, configLoading])
 
   // Debug logging
   useEffect(() => {
@@ -177,16 +168,16 @@ function ChassisPage() {
 
     // Apply search term filter (if any)
     if (searchTerm) {
-      const term = searchTerm.toLowerCase()
+    const term = searchTerm.toLowerCase()
       filtered = filtered.filter((chassis) => {
-        const serialNumber = chassis['chassisSerial#'] || chassis.chassisSerialNumber || ''
-        return (
-          chassis.chassisIp?.toLowerCase().includes(term) ||
-          serialNumber.toLowerCase().includes(term) ||
-          chassis.chassisType?.toLowerCase().includes(term) ||
-          chassis.tags?.some(tag => tag.toLowerCase().includes(term))
-        )
-      })
+      const serialNumber = chassis['chassisSerial#'] || chassis.chassisSerialNumber || ''
+      return (
+        chassis.chassisIp?.toLowerCase().includes(term) ||
+        serialNumber.toLowerCase().includes(term) ||
+        chassis.chassisType?.toLowerCase().includes(term) ||
+        chassis.tags?.some(tag => tag.toLowerCase().includes(term))
+      )
+    })
     }
 
     return filtered
@@ -384,15 +375,15 @@ function ChassisPage() {
         <Card>
           <CardHeader>
             <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by IP, Serial Number, Type, or Tags..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by IP, Serial Number, Type, or Tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
                 </div>
                 {(Object.values(filters).some(f => f !== '') || searchTerm) && (
                   <Button

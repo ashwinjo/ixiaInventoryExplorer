@@ -118,38 +118,37 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                             tags = ""
                     else:
                         tags = ""
-                        
+                    
                     record.update({"tags": tags})
                     
                     # Insert all records, including failed ones with "Not Reachable" status
                     # This ensures the UI always shows the latest state for polled chassis
                     await conn.execute(f"""INSERT INTO {table_name} (ip, chassisSN, controllerSN, type_of_chassis, 
-                                physicalCards, status_status, ixOS, ixNetwork_Protocols, ixOS_REST, tags, lastUpdatedAt_UTC, 
-                                mem_bytes, mem_bytes_total, cpu_pert_usage, os) VALUES 
-                                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)""",
-                                (record["chassisIp"], record['chassisSerial#'],
-                                record['controllerSerial#'], record['chassisType'], record['physicalCards#'],
-                                record['chassisStatus'],
-                                record.get('IxOS', "NA"), record.get('IxNetwork Protocols',"NA"), record.get('IxOS REST',"NA"), record['tags'], 
-                                record.get('mem_bytes', '0'), record.get('mem_bytes_total', '0'), record.get('cpu_pert_usage', '0'),
-                                record['os']))
+                        physicalCards, status_status, ixOS, ixNetwork_Protocols, ixOS_REST, tags, lastUpdatedAt_UTC, 
+                        mem_bytes, mem_bytes_total, cpu_pert_usage, os) VALUES 
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)""",
+                        (record["chassisIp"], record['chassisSerial#'],
+                        record['controllerSerial#'], record['chassisType'], record['physicalCards#'],
+                        record['chassisStatus'],
+                        record.get('IxOS', "NA"), record.get('IxNetwork Protocols',"NA"), record.get('IxOS REST',"NA"), record['tags'], 
+                        record.get('mem_bytes', '0'), record.get('mem_bytes_total', '0'), record.get('cpu_pert_usage', '0'),
+                        record['os']))
             elif table_name != "chassis_utilization_details":
                 # For other tables, clear all records as before
                 await conn.execute(f"DELETE FROM {table_name}")
-            
-            # Process other table types (only if not chassis_summary_details, which we handled above)
-            if table_name != "chassis_summary_details":
+        
+                # Process other table types (only if not chassis_summary_details, which we handled above)
                 for record in records:
                     if table_name == "license_details_records":
                         for rcd in record:
                             await conn.execute(f"""INSERT INTO {table_name} (chassisIp, typeOfChassis, hostId, partNumber, 
-                                        activationCode, quantity, description, maintenanceDate, expiryDate, isExpired, lastUpdatedAt_UTC) VALUES 
-                                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
-                                        (rcd["chassisIp"], rcd["typeOfChassis"],
-                                        rcd["hostId"], rcd["partNumber"],
-                                        rcd["activationCode"], str(rcd["quantity"]), rcd["description"],
-                                        rcd["maintenanceDate"], rcd["expiryDate"], str(rcd["isExpired"])))
-                        
+                                activationCode, quantity, description, maintenanceDate, expiryDate, isExpired, lastUpdatedAt_UTC) VALUES 
+                                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                                (rcd["chassisIp"], rcd["typeOfChassis"],
+                                rcd["hostId"], rcd["partNumber"],
+                                rcd["activationCode"], str(rcd["quantity"]), rcd["description"],
+                                rcd["maintenanceDate"], rcd["expiryDate"], str(rcd["isExpired"])))
+                    
                     if table_name == "chassis_card_details":
                         for rcd in record:
                             if ip_tags_dict:
@@ -162,20 +161,20 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                                 tags = ""    
                             rcd.update({"tags": tags})
                             await conn.execute(f"""INSERT INTO {table_name} (chassisIp,typeOfChassis,cardNumber,serialNumber,cardType,cardState,numberOfPorts,tags,
-                                        lastUpdatedAt_UTC) VALUES 
-                                        (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
-                                        (rcd["chassisIp"], rcd["chassisType"], rcd["cardNumber"], rcd["serialNumber"],
-                                        rcd["cardType"], rcd["cardState"], rcd["numberOfPorts"], rcd['tags']))
+                                lastUpdatedAt_UTC) VALUES 
+                                (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                                (rcd["chassisIp"], rcd["chassisType"], rcd["cardNumber"], rcd["serialNumber"],
+                                rcd["cardType"], rcd["cardState"], rcd["numberOfPorts"], rcd['tags']))
                     
                     if table_name == "chassis_port_details":
                         for rcd in record:
                             await conn.execute(f"""INSERT INTO {table_name} (chassisIp,typeOfChassis,cardNumber,portNumber,linkState,phyMode,transceiverModel,
-                                        transceiverManufacturer,owner, speed, type, totalPorts,ownedPorts,freePorts, transmitState, lastUpdatedAt_UTC) VALUES 
-                                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
-                                        (rcd["chassisIp"], rcd["typeOfChassis"], rcd["cardNumber"], rcd["portNumber"], rcd.get("linkState", "NA"),
-                                        rcd.get("phyMode","NA"), rcd.get("transceiverModel", "NA"), rcd.get("transceiverManufacturer", "NA"), rcd["owner"],
-                                        rcd.get("speed", "NA"), rcd.get("type", "NA"), rcd["totalPorts"], rcd["ownedPorts"], rcd["freePorts"], rcd.get('transmitState','NA')))
-                        
+                                transceiverManufacturer,owner, speed, type, totalPorts,ownedPorts,freePorts, transmitState, lastUpdatedAt_UTC) VALUES 
+                                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                                (rcd["chassisIp"], rcd["typeOfChassis"], rcd["cardNumber"], rcd["portNumber"], rcd.get("linkState", "NA"),
+                                rcd.get("phyMode","NA"), rcd.get("transceiverModel", "NA"), rcd.get("transceiverManufacturer", "NA"), rcd["owner"],
+                                rcd.get("speed", "NA"), rcd.get("type", "NA"), rcd["totalPorts"], rcd["ownedPorts"], rcd["freePorts"], rcd.get('transmitState','NA')))
+                    
                     if table_name == "chassis_sensor_details":
                         for rcd in record:
                             unit = rcd["unit"]
@@ -184,15 +183,16 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                             if rcd["unit"] == "AMPERSEND": 
                                 unit = "AMP"
                             await conn.execute(f"""INSERT INTO {table_name} (chassisIp,typeOfChassis,sensorType,sensorName,sensorValue,unit,lastUpdatedAt_UTC) VALUES 
-                                        (?, ?, ?, ?, ?, ?, datetime('now'))""",
-                                        (rcd["chassisIp"], rcd["typeOfChassis"], rcd.get("type", "NA"), rcd["name"],
-                                        rcd["value"], unit))
-                  
-                    if table_name == "chassis_utilization_details":
-                        await conn.execute(f"""INSERT INTO {table_name} (chassisIp,mem_utilization,cpu_utilization,lastUpdatedAt_UTC) VALUES 
-                                        (?, ?, ?, ?)""",
-                                        (record["chassisIp"], record["mem_utilization"], record["cpu_utilization"], record["lastUpdatedAt_UTC"]))
-                
+                                (?, ?, ?, ?, ?, ?, datetime('now'))""",
+                                (rcd["chassisIp"], rcd["typeOfChassis"], rcd.get("type", "NA"), rcd["name"],
+                                rcd["value"], unit))
+            
+            if table_name == "chassis_utilization_details":
+                for record in records:
+                    await conn.execute(f"""INSERT INTO {table_name} (chassisIp,mem_utilization,cpu_utilization,lastUpdatedAt_UTC) VALUES 
+                        (?, ?, ?, ?)""",
+                        (record["chassisIp"], record["mem_utilization"], record["cpu_utilization"], record["lastUpdatedAt_UTC"]))
+            
             await conn.commit()
         except Exception as e:
             if conn:
@@ -260,7 +260,7 @@ async def write_tags(ip: str, tags: str, type_of_update: str, operation: str) ->
                         if t in currenttags:
                             currenttags.remove(t)
                     updated_tags = ",".join(currenttags)
-                    
+                
                 await conn.execute(f"UPDATE {table} SET tags = ? where {field} = ?", (updated_tags, ip))
                 if type_of_update == "chassis":
                     await conn.execute(f"UPDATE chassis_summary_details SET tags = ? where ip = ?", (updated_tags, ip))
@@ -454,7 +454,7 @@ async def write_polling_intervals_into_database(chassis: int, cards: int, ports:
             conn = await get_db_connection()
             await conn.execute("DELETE from poll_setting")
             await conn.execute(f"""INSERT INTO poll_setting (chassis, cards, ports, sensors, perf, licensing, data_purge) VALUES 
-                        (?, ?, ?, ?, ?, ?, ?)""", (chassis, cards, ports, sensors, perf, licensing, data_purge))
+                (?, ?, ?, ?, ?, ?, ?)""", (chassis, cards, ports, sensors, perf, licensing, data_purge))
             await conn.commit()
         except Exception as e:
             if conn:
@@ -497,11 +497,52 @@ async def delete_half_data_from_performance_metric_table():
         try:
             conn = await get_db_connection()
             query = """DELETE FROM chassis_utilization_details 
-                        WHERE rowid IN 
-                        (SELECT rowid FROM chassis_utilization_details ORDER BY lastUpdatedAt_UTC DESC
-                        LIMIT (SELECT COUNT(*)/2 FROM chassis_utilization_details))"""
+                WHERE rowid IN 
+                (SELECT rowid FROM chassis_utilization_details ORDER BY lastUpdatedAt_UTC DESC
+                LIMIT (SELECT COUNT(*)/2 FROM chassis_utilization_details))"""
             await conn.execute(query)
             await conn.commit()
+        except Exception as e:
+            if conn:
+                try:
+                    await conn.rollback()
+                except Exception:
+                    pass
+            raise e
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
+
+
+async def reset_database():
+    """Delete all records from all inventory and configuration tables"""
+    async with _db_write_semaphore:
+        conn = None
+        try:
+            conn = await get_db_connection()
+            tables = [
+                "chassis_summary_details",
+                "chassis_card_details",
+                "chassis_port_details",
+                "chassis_sensor_details",
+                "license_details_records",
+                "chassis_utilization_details",
+                "user_db",
+                "user_ip_tags",
+                "user_card_tags"
+            ]
+            for table in tables:
+                # Check if table exists before deleting
+                try:
+                    await conn.execute(f"DELETE FROM {table}")
+                except Exception:
+                    pass
+            
+            await conn.commit()
+            return True
         except Exception as e:
             if conn:
                 try:

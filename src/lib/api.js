@@ -24,9 +24,12 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',  // Explicitly request JSON
     // Skip ngrok browser warning interstitial (required for ngrok free tier)
     'ngrok-skip-browser-warning': 'true',
   },
+  // Ensure axios parses JSON responses
+  responseType: 'json',
 })
 
 // Request interceptor
@@ -46,6 +49,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log('API Response:', response.status, response.config.url)
+    
+    // Check if we got HTML instead of JSON (indicates proxy issue or wrong server)
+    const contentType = response.headers['content-type'] || ''
+    if (contentType.includes('text/html') && response.config.url?.startsWith('/api')) {
+      console.error('[API Error] Received HTML instead of JSON for API request:', response.config.url)
+      console.error('[API Error] This usually means the proxy is not working or the backend is not running')
+      console.error('[API Error] Response preview:', String(response.data).substring(0, 200))
+      
+      // Reject with a clear error
+      return Promise.reject(new Error('API returned HTML instead of JSON. Check that the backend is running and the proxy is configured correctly.'))
+    }
+    
+    // Also check if data is a string that looks like HTML
+    if (typeof response.data === 'string' && response.data.trim().startsWith('<!')) {
+      console.error('[API Error] Response data is HTML string:', response.data.substring(0, 200))
+      return Promise.reject(new Error('API returned HTML instead of JSON'))
+    }
+    
     return response
   },
   (error) => {
