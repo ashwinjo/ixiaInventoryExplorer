@@ -532,7 +532,9 @@ async def reset_database():
                 "chassis_utilization_details",
                 "user_db",
                 "user_ip_tags",
-                "user_card_tags"
+                "user_card_tags",
+                "ixnetwork_user_db",
+                "ixnetwork_api_server_details"
             ]
             for table in tables:
                 # Check if table exists before deleting
@@ -565,4 +567,175 @@ def is_input_in_correct_format(ip_pw_list: str) -> bool:
             if len(line.split(",")) != 4:
                 return False
     return True
+
+
+# =====================================================================
+# IxNetwork API Server Management Functions
+# =====================================================================
+
+# --- Credential Management (ixnetwork_user_db) ---
+
+async def write_ixnetwork_credentials_to_database(list_of_credentials: str):
+    """Write IxNetwork API server credentials into database (ixnetwork_user_db)"""
+    async with _db_write_semaphore:
+        conn = None
+        try:
+            conn = await get_db_connection()
+            await conn.execute("DELETE from ixnetwork_user_db")
+            cred_dict = await create_ixnetwork_config_dict(list_of_credentials)
+            cred_dict = list({v['ip']:v for v in cred_dict}.values())
+            json_str_data = json.dumps(cred_dict)
+            await conn.execute("INSERT INTO ixnetwork_user_db (ixnetwork_servers_json) VALUES (?)", (json_str_data,))
+            await conn.commit()
+        except Exception as e:
+            if conn:
+                try:
+                    await conn.rollback()
+                except Exception:
+                    pass
+            raise e
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
+
+
+async def read_ixnetwork_credentials_from_database() -> str:
+    """Read IxNetwork API server credentials from database"""
+    async with _db_read_semaphore:
+        conn = None
+        try:
+            conn = await get_db_connection()
+            cursor = await conn.execute("SELECT * FROM ixnetwork_user_db")
+            post = await cursor.fetchone()
+            if post:
+                return post['ixnetwork_servers_json']
+            return "[]"
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
+
+
+async def create_ixnetwork_config_dict(list_of_credentials: str) -> List[Dict]:
+    """Helper function to process ADD/DELETE/UPDATE operations for IxNetwork credentials"""
+    config_now_str = await read_ixnetwork_credentials_from_database()
+    config = list_of_credentials.split("\n")
+    config_now = []
+    
+    if config_now_str:
+        config_now = json.loads(config_now_str)
+        for item in config:
+            if item:
+                parts = item.split(",")
+                if len(parts) == 4:
+                    operation, ip, un, pw = parts
+                    if operation.strip().upper() == "DELETE":
+                        config_now = [c for c in config_now if c["ip"] != ip.strip()]
+                    elif operation.strip().upper() == "ADD":
+                        if ip.strip() not in [c["ip"] for c in config_now]:
+                            config_now.append({
+                                "ip": ip.strip(),
+                                "username": un.strip(),
+                                "password": pw.strip(),
+                            })
+                    elif operation.strip().upper() == "UPDATE":
+                        for idx, server_config in enumerate(config_now):
+                            if ip.strip() == server_config["ip"]:
+                                config_now[idx] = {
+                                    "ip": ip.strip(),
+                                    "username": un.strip(),
+                                    "password": pw.strip(),
+                                }
+                                break
+    else:
+        for item in config:
+            if item:
+                parts = item.split(",")
+                if len(parts) == 4:
+                    operation, ip, un, pw = parts
+                    if operation.strip().upper() == "ADD":
+                        config_now.append({
+                            "ip": ip.strip(),
+                            "username": un.strip(),
+                            "password": pw.strip(),
+                        })
+    return config_now
+
+
+def is_ixnetwork_input_in_correct_format(input_list: str) -> bool:
+    """Validate IxNetwork API server input format (operation,ip,username,password)"""
+    for line in input_list.split("\n"):
+        if line.strip():  # Skip empty lines
+            parts = line.split(",")
+            if len(parts) != 4:
+                return False
+            operation = parts[0].strip().upper()
+            if operation not in ["ADD", "DELETE", "UPDATE"]:
+                return False
+    return True
+
+
+# --- Polled Data Management (ixnetwork_api_server_details) ---
+
+async def write_ixnetwork_server_details_to_database(records: List[Dict]):
+    """Write polled IxNetwork API server details into database"""
+    async with _db_write_semaphore:
+        conn = None
+        try:
+            conn = await get_db_connection()
+            # Clear existing records for servers we're updating
+            server_ips_to_update = [r["ixnetwork_api_server_ip"] for r in records]
+            if server_ips_to_update:
+                placeholders = ','.join('?' * len(server_ips_to_update))
+                await conn.execute(f"DELETE FROM ixnetwork_api_server_details WHERE ixnetwork_api_server_ip IN ({placeholders})", server_ips_to_update)
+            
+            # Insert new records
+            for record in records:
+                await conn.execute("""INSERT INTO ixnetwork_api_server_details 
+                    (ixnetwork_api_server_ip, ixnetwork_api_server_type, ixnetwork_api_server_sessions,
+                    ixnetwork_api_server_running_sessions, ixnetwork_api_server_idle_sessions, lastUpdatedAt_UTC) 
+                    VALUES (?, ?, ?, ?, ?, datetime('now'))""",
+                    (record["ixnetwork_api_server_ip"], 
+                     record.get("ixnetwork_api_server_type", "Unknown"),
+                     record.get("ixnetwork_api_server_sessions", "0"),
+                     record.get("ixnetwork_api_server_running_sessions", "0"),
+                     record.get("ixnetwork_api_server_idle_sessions", "0")))
+            
+            await conn.commit()
+        except Exception as e:
+            if conn:
+                try:
+                    await conn.rollback()
+                except Exception:
+                    pass
+            raise e
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
+
+
+async def read_ixnetwork_server_details_from_database() -> List[Dict]:
+    """Read polled IxNetwork API server details from database"""
+    async with _db_read_semaphore:
+        conn = None
+        try:
+            conn = await get_db_connection()
+            cursor = await conn.execute("SELECT * FROM ixnetwork_api_server_details")
+            rows = await cursor.fetchall()
+            records = [dict(row) for row in rows]
+            return records
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
 

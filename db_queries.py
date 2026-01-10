@@ -112,3 +112,19 @@ create_poll_settings_table = """CREATE TABLE IF NOT EXISTS poll_setting (
                                 data_purge INTEGER,
                                 alertMonitor INTEGER
                                 );"""
+
+# IxNetwork API Server tables
+# Stores credentials for IxNetwork API Servers (similar to user_db for chassis)
+create_ixnetwork_user_db_table = """CREATE TABLE IF NOT EXISTS ixnetwork_user_db (
+                                ixnetwork_servers_json TEXT
+                                );"""
+
+# Stores polled data from IxNetwork API Servers
+create_ixnetwork_api_server_details_table = """CREATE TABLE IF NOT EXISTS ixnetwork_api_server_details (
+                                ixnetwork_api_server_ip VARCHAR(255) NOT NULL,
+                                ixnetwork_api_server_type TEXT,
+                                ixnetwork_api_server_sessions TEXT,
+                                ixnetwork_api_server_running_sessions TEXT,
+                                ixnetwork_api_server_idle_sessions TEXT,
+                                lastUpdatedAt_UTC TEXT
+                                );"""

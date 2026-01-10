@@ -9,10 +9,13 @@ from app.database import (
     write_data_to_database, 
     get_chassis_type_from_ip, 
     delete_half_data_from_performance_metric_table, 
-    read_poll_setting_from_database
+    read_poll_setting_from_database,
+    read_ixnetwork_credentials_from_database,
+    write_ixnetwork_server_details_to_database
 )
 import IxOSRestAPICaller as ixOSRestCaller
 from RestApi.IxOSRestInterface import IxRestSession
+import IxNetworkRestAPICaller as ixNetworkRestCaller
 
 
 async def fetch_chassis_summary_for_one(chassis: Dict, retry_count: int = 3) -> Dict:
@@ -346,6 +349,95 @@ async def delete_half_metric_records_weekly():
     await delete_half_data_from_performance_metric_table()
 
 
+# =====================================================================
+# IxNetwork API Server Polling Functions
+# =====================================================================
+
+async def fetch_ixnetwork_server_for_one(server: Dict, retry_count: int = 3) -> Dict:
+    """Fetch IxNetwork API server session data for a single server with retry logic"""
+    def _sync_fetch():
+        from requests.exceptions import Timeout, ConnectionError as RequestsConnectionError
+        
+        last_exception = None
+        for attempt in range(retry_count):
+            try:
+                # Create session - try standalone first, then onchassis
+                session = ixNetworkRestCaller.IxNRestSessions(
+                    server["ip"], 
+                    username=server["username"], 
+                    password=server["password"],
+                    ixnetwork_server_type="standalone",
+                    verbose=False,
+                    timeout=30
+                )
+                out = ixNetworkRestCaller.get_ixnetwork_session_summary(session, server["ip"])
+                if attempt > 0:
+                    print(f"[POLL] IxNetwork Server {server['ip']} succeeded on retry attempt {attempt + 1}")
+                return out
+            except Timeout as e:
+                last_exception = e
+                error_msg = f"Timeout after {30}s"
+                print(f"[POLL] IxNetwork Server {server['ip']} attempt {attempt + 1}/{retry_count}: {error_msg}")
+                if attempt < retry_count - 1:
+                    wait_time = 2 * (attempt + 1)
+                    time.sleep(wait_time)
+                    continue
+            except RequestsConnectionError as e:
+                last_exception = e
+                print(f"[POLL] IxNetwork Server {server['ip']} attempt {attempt + 1}/{retry_count}: Connection error: {str(e)}")
+                if attempt < retry_count - 1:
+                    wait_time = 3 * (attempt + 1)
+                    time.sleep(wait_time)
+                    continue
+            except Exception as e:
+                last_exception = e
+                error_type = type(e).__name__
+                print(f"[POLL] IxNetwork Server {server['ip']} attempt {attempt + 1}/{retry_count}: {error_type}: {str(e)}")
+                if attempt < retry_count - 1:
+                    wait_time = 2 * (attempt + 1)
+                    time.sleep(wait_time)
+                    continue
+        
+        # If all retries failed, return error response
+        print(f"[POLL] IxNetwork Server {server['ip']} FAILED after {retry_count} attempts. Last error: {type(last_exception).__name__ if last_exception else 'Unknown'}")
+        return {
+            "ixnetwork_api_server_ip": server["ip"],
+            "ixnetwork_api_server_type": "Not Reachable",
+            "ixnetwork_api_server_sessions": "0",
+            "ixnetwork_api_server_running_sessions": "0",
+            "ixnetwork_api_server_idle_sessions": "0"
+        }
+    
+    # Run the synchronous REST call in a thread pool to avoid blocking
+    return await asyncio.to_thread(_sync_fetch)
+
+
+async def get_ixnetwork_server_data():
+    """This is a call to RestAPI to get IxNetwork API server session data - async version"""
+    serv_list = await read_ixnetwork_credentials_from_database()
+    if serv_list:
+        server_list = json.loads(serv_list)
+        print(f"[POLL] Starting IxNetwork API server data fetch for {len(server_list)} server(s)")
+        
+        # Fetch all server data concurrently
+        tasks = [fetch_ixnetwork_server_for_one(server) for server in server_list]
+        list_of_servers = await asyncio.gather(*tasks)
+        
+        # Log results
+        successful = [s for s in list_of_servers if s.get("ixnetwork_api_server_type") != "Not Reachable"]
+        failed = [s for s in list_of_servers if s.get("ixnetwork_api_server_type") == "Not Reachable"]
+        print(f"[POLL] IxNetwork server fetch completed: {len(successful)} successful, {len(failed)} failed")
+        if failed:
+            failed_ips = [s["ixnetwork_api_server_ip"] for s in failed]
+            print(f"[POLL] Failed IxNetwork server IPs: {', '.join(failed_ips)}")
+        
+        # Write to database
+        await write_ixnetwork_server_details_to_database(records=list_of_servers)
+        print(f"[POLL] IxNetwork server data written to database")
+    else:
+        print("[POLL] No IxNetwork API Server List found in database")
+
+
 async def controller(category_of_poll=None):
     """Async controller function"""
     await categoryToFuntionMap[category_of_poll]()
@@ -353,13 +445,15 @@ async def controller(category_of_poll=None):
 
 categoryToFuntionMap = {
     "chassis": get_chassis_summary_data,
-                        "cards": get_chassis_card_data,
-                        "ports": get_chassis_port_data,
-                        "licensing": get_chassis_licensing_data,
-                        "sensors": get_sensor_information,
-                        "perf": get_perf_metrics,
-    "data_purge": delete_half_metric_records_weekly
+    "cards": get_chassis_card_data,
+    "ports": get_chassis_port_data,
+    "licensing": get_chassis_licensing_data,
+    "sensors": get_sensor_information,
+    "perf": get_perf_metrics,
+    "data_purge": delete_half_metric_records_weekly,
+    "ixnetwork": get_ixnetwork_server_data
 }
+
 
 
 @click.command()
@@ -387,7 +481,8 @@ def start_poller(category, interval):
         "licensing": 300,
         "sensors": 180,
         "perf": 60,
-        "data_purge": 86400
+        "data_purge": 86400,
+        "ixnetwork": 60
     }
     
     while True:

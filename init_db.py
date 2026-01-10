@@ -41,7 +41,9 @@ def delete_table(conn):
             "DROP TABLE IF EXISTS license_details_records",
             "DROP TABLE IF EXISTS user_db",
             "DROP TABLE IF EXISTS poll_setting",
-            "DROP TABLE IF EXISTS chassis_utilization_details"]
+            "DROP TABLE IF EXISTS chassis_utilization_details",
+            "DROP TABLE IF EXISTS ixnetwork_user_db",
+            "DROP TABLE IF EXISTS ixnetwork_api_server_details"]
     try:
         c = conn.cursor()
         for cmd in cmds:
@@ -85,5 +87,9 @@ def create_data_tables():
         create_table(conn, db_queries.create_card_tags_sql)
         create_table(conn, db_queries.create_usage_metrics)
         create_table(conn, db_queries.create_poll_settings_table)
+        
+        # IxNetwork API Server tables
+        create_table(conn, db_queries.create_ixnetwork_user_db_table)
+        create_table(conn, db_queries.create_ixnetwork_api_server_details_table)
 
 create_data_tables()

@@ -34,6 +34,11 @@ export const uploadConfig = (data) => api.post('/api/config/upload', data)
 export const setPollingIntervals = (data) => api.post('/api/config/polling-intervals', data)
 export const resetDatabase = () => api.delete('/api/config/reset')
 
+// IxNetwork API Server endpoints
+export const getConfiguredIxNetworkServers = () => api.get('/api/config/ixnetwork-servers')
+export const uploadIxNetworkServerConfig = (data) => api.post('/api/config/ixnetwork-servers/upload', data)
+export const getIxNetworkServerDetails = () => api.get('/api/config/ixnetwork-server-details')
+
 // Logs endpoints
 export const collectLogs = (data) => api.post('/api/logs/collect', data)
 
