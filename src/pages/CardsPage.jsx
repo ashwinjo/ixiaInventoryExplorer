@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { RefreshCw, Plus, X, Search, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 function CardsPage() {
   const { data, loading, error, refetch } = useApi(getCards)
@@ -492,17 +493,7 @@ function CardsPage() {
                       <TableCell>{card.serialNumber}</TableCell>
                       <TableCell>{card.cardType}</TableCell>
                       <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            card.cardState === 'UP' || card.cardState === 'Up'
-                              ? 'bg-green-100 text-green-800'
-                              : card.cardState === 'DOWN' || card.cardState === 'Down'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {card.cardState}
-                        </span>
+                        <StatusBadge status={card.cardState} />
                       </TableCell>
                       <TableCell>{card.numberOfPorts ?? 'N/A'}</TableCell>
                       <TableCell>

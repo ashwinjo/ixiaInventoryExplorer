@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RefreshCw, Plus, X, Search, Download } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 function ChassisPage() {
   // Fetch data immediately on mount
@@ -575,17 +576,7 @@ function ChassisPage() {
                         </TableCell>
                         <TableCell>{chassis.cpu_pert_usage && chassis.cpu_pert_usage !== 'NA' ? `${chassis.cpu_pert_usage}%` : 'N/A'}</TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              chassis.chassisStatus === 'Ready' || chassis.chassisStatus === 'UP'
-                                ? 'bg-green-100 text-green-800'
-                                : chassis.chassisStatus === 'Not Reachable' || chassis.chassisStatus === 'Not Available'
-                                ? 'bg-red-200 text-red-900 border border-red-400'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {chassis.chassisStatus || 'N/A'}
-                          </span>
+                          <StatusBadge status={chassis.chassisStatus} />
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
