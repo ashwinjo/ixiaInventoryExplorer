@@ -204,3 +204,22 @@
 .light .markdown-content code { @apply bg-slate-100 px-1 py-0.5 rounded font-mono text-cyan-700 border border-slate-200; }
 .light .markdown-content strong { @apply text-purple-700 font-bold; }
 .light .markdown-content blockquote { @apply border-l-2 border-purple-400 pl-3 italic text-slate-600 mb-4 bg-purple-50 py-1 rounded-r; }
+
+/* ============================================
+   Force Dark Mode for Chat Panel (always dark bg)
+   ============================================ */
+.markdown-content-dark h1 { @apply text-lg font-black text-white mb-4 mt-2 border-b border-white/10 pb-1 !important; }
+.markdown-content-dark h2 { @apply text-base font-bold text-white mb-3 mt-4 !important; }
+.markdown-content-dark h3 { @apply text-sm font-bold text-purple-300 mb-2 mt-3 !important; }
+.markdown-content-dark p { @apply mb-3 last:mb-0 text-slate-300 !important; }
+.markdown-content-dark ul { @apply list-disc list-inside mb-4 space-y-1 text-slate-400 !important; }
+.markdown-content-dark ol { @apply list-decimal list-inside mb-4 space-y-1 text-slate-400 !important; }
+.markdown-content-dark li { @apply leading-relaxed text-slate-400 !important; }
+.markdown-content-dark table { @apply w-full border-collapse mb-4 text-[10px] bg-black/20 rounded-lg overflow-hidden !important; }
+.markdown-content-dark th { @apply bg-white/5 border border-white/10 p-2 text-left font-black text-purple-300 uppercase tracking-tighter !important; }
+.markdown-content-dark td { @apply border border-white/5 p-2 text-slate-400 !important; }
+.markdown-content-dark tr:nth-child(even) { @apply bg-white/[0.02] !important; }
+.markdown-content-dark tr:hover { @apply bg-white/[0.05] !important; }
+.markdown-content-dark code { @apply bg-white/10 px-1 py-0.5 rounded font-mono text-cyan-300 !important; }
+.markdown-content-dark strong { @apply text-purple-200 font-bold !important; }
+.markdown-content-dark blockquote { @apply border-l-2 border-purple-500/50 pl-3 italic text-slate-400 mb-4 bg-purple-500/5 py-1 rounded-r !important; }

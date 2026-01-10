@@ -287,13 +287,13 @@ const ChatAssistant = ({ isCollapsed, onToggle }) => {
                                     <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)] ${adkAvailable ? 'bg-green-500' : adkAvailable === false ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`}></div>
                                 </div>
                                 <div>
-                                    <span className="font-bold text-slate-200 text-xs tracking-[0.1em] uppercase block leading-none">Dwight - Intelligence Hub</span>
+                                    <span className="font-bold !text-slate-200 text-xs tracking-[0.1em] uppercase block leading-none">Dwight - Intelligence Hub</span>
                                 </div>
                             </div>
                             <button
                                 onClick={handleNewSession}
                                 disabled={isCreatingSession || !adkAvailable}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg text-[10px] font-semibold text-purple-300 uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg text-[10px] font-semibold !text-purple-300 uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                 title="Start a new session"
                             >
                                 <RefreshCw size={12} className={isCreatingSession ? 'animate-spin' : ''} />
@@ -302,8 +302,8 @@ const ChatAssistant = ({ isCollapsed, onToggle }) => {
                         </div>
                         {/* Bottom row: Session info */}
                         <div className="flex items-center justify-between text-[9px] font-mono">
-                            <span className="text-white/30 uppercase">User: <span className="text-cyan-400">{USER_NAME}</span></span>
-                            <span className="text-white/30">Assistant: <span className="text-purple-400 font-bold">Dwight</span> | Session: <span className="text-emerald-400 font-semibold">{sessionId}</span></span>
+                            <span className="!text-white/30 uppercase">User: <span className="!text-cyan-400">{USER_NAME}</span></span>
+                            <span className="!text-white/30">Assistant: <span className="!text-purple-400 font-bold">Dwight</span> | Session: <span className="!text-emerald-400 font-semibold">{sessionId}</span></span>
                         </div>
                     </div>
                 ) : (
@@ -345,7 +345,7 @@ const ChatAssistant = ({ isCollapsed, onToggle }) => {
                                 }}
                                 placeholder={adkAvailable ? "Command input..." : "Assistant offline..."}
                                 disabled={!adkAvailable}
-                                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 pr-12 text-xs text-white placeholder-white/10 focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all resize-none min-h-[45px] max-h-32 disabled:opacity-50"
+                                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 pr-12 text-xs !text-white placeholder-white/10 focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all resize-none min-h-[45px] max-h-32 disabled:opacity-50"
                                 rows={1}
                             />
                             <button
@@ -359,11 +359,11 @@ const ChatAssistant = ({ isCollapsed, onToggle }) => {
                         <div className="mt-3 flex items-center justify-between px-1 opacity-40">
                             <div className="flex items-center gap-1.5">
                                 <div className={`w-1.5 h-1.5 rounded-full ${adkAvailable ? 'bg-green-500' : adkAvailable === false ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                <span className="text-[8px] font-black tracking-widest uppercase text-white/40">
+                                <span className="text-[8px] font-black tracking-widest uppercase !text-white/40">
                                     {adkAvailable ? 'Bridge Link Stable' : adkAvailable === false ? 'Offline' : 'Connecting...'}
                                 </span>
                             </div>
-                            <span className="text-[8px] font-mono italic">v2.1.0-sidebar</span>
+                            <span className="text-[8px] font-mono italic !text-white/40">v2.1.0-sidebar</span>
                         </div>
                     </div>
                 </>

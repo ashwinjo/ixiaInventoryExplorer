@@ -58,7 +58,10 @@ function Navbar() {
   const { theme, toggleTheme, isDark } = useTheme()
 
   return (
-    <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
+    <nav className={cn(
+      "border-b border-border/50 backdrop-blur-md sticky top-0 z-50",
+      isDark ? "bg-card/80" : "bg-black"
+    )}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">

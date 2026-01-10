@@ -1,0 +1,61 @@
+version: '3.8'
+
+# Development Docker Compose - Exposes both frontend and backend separately
+# Frontend: http://localhost:5174
+# Backend: http://localhost:3001
+
+services:
+  # Backend - FastAPI/Uvicorn
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ixia-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount database directory for persistence
+      - ./data:/app/data
+      # Optional: Mount credentials file
+      - ./credentials.json:/app/credentials.json:ro
+    environment:
+      - PORT=3001
+      - DEBUG=False
+      - DATABASE_PATH=/app/data/inventory.db
+      - CORS_ORIGINS=*
+      - HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ixia-network
+
+  # Frontend - Vite Dev Server
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ixia-frontend
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_API_URL=http://backend:3001
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ixia-network
+
+networks:
+  ixia-network:
+    driver: bridge
+
+volumes:
+  ixia-data:
+    driver: local
+
