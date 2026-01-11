@@ -1,15 +1,26 @@
+# Core FastAPI stack
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart
 jinja2
+
+# Async utilities
 aiofiles
 aiosqlite
+
+# General utilities
 python-dotenv
 pandas
 requests
 click
+
+# Ixia REST API
 ixnetwork_restpy
+
+# Google ADK and MCP
 google-adk
 mcp
 fastmcp
+
+# NetBox client
 pynetbox

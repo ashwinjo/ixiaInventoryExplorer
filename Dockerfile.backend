@@ -3,16 +3,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and uv (fast Python package installer)
 RUN apt-get update && apt-get install -y \
     procps \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install uv
 
-# Install Python dependencies
+# Install Python dependencies using uv (much faster than pip for complex deps)
 COPY requirements.txt ./
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
+RUN uv pip install --system --no-cache -r requirements.txt
 
 # Copy application files
 COPY main.py ./
@@ -42,6 +42,11 @@ USER appuser
 # Backend port
 ENV PORT=3001
 EXPOSE 3001
+
+# ADK Agent URL (configurable at runtime)
+# Default: http://localhost:8000 (for local development)
+# In Docker: Use host.docker.internal:8000 (Mac/Windows) or host IP (Linux)
+ENV ADK_URL=http://localhost:8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

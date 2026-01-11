@@ -18,9 +18,16 @@ COPY vite.config.docker.js ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Expose Vite dev server port
+# Copy entrypoint script
+COPY docker-entrypoint-frontend.sh ./
+RUN chmod +x docker-entrypoint-frontend.sh
+
+# Expose Vite dev server port (configurable via PORT env var)
+ENV PORT=5174
 EXPOSE 5174
 
 # Start Vite dev server with Docker-specific config
-CMD ["npx", "vite", "--config", "vite.config.docker.js", "--port", "5174", "--host", "0.0.0.0"]
+# Backend URL can be configured via VITE_BACKEND_URL env var
+# Default: http://backend:3001 (for docker-compose)
+ENTRYPOINT ["./docker-entrypoint-frontend.sh"]
 

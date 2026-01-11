@@ -222,9 +222,11 @@ const ChatAssistant = ({ isCollapsed, onToggle }) => {
             setMessages((prev) => [...prev, { role: 'assistant', text: assistantText }]);
         } catch (error) {
             console.error('Error calling agent:', error);
+            // ADK URL is configurable via VITE_ADK_URL env var (for display purposes)
+            const adkUrl = import.meta.env.VITE_ADK_URL || 'ADK server';
             setMessages((prev) => [
                 ...prev,
-                { role: 'assistant', text: 'Error: Could not reach the assistant. Make sure the ADK server is running: http://localhost:8000' }
+                { role: 'assistant', text: `Error: Could not reach the assistant. Make sure the ${adkUrl} is running and accessible.` }
             ]);
         } finally {
             setIsLoading(false);

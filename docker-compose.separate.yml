@@ -1,0 +1,84 @@
+version: '3.8'
+
+# =============================================================================
+# DEVELOPMENT Docker Compose - Separate Frontend & Backend Services
+# =============================================================================
+# Frontend: http://localhost:5174 (Vite dev server with hot reload)
+# Backend:  http://localhost:3001 (FastAPI with background pollers)
+# =============================================================================
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up -d
+#   docker-compose -f docker-compose.dev.yml logs -f
+#   docker-compose -f docker-compose.dev.yml down
+#
+# =============================================================================
+
+services:
+  # Backend - FastAPI/Uvicorn with background pollers
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: ixia-backend:latest
+    container_name: ixia-backend
+    ports:
+      - "${BACKEND_PORT:-3001}:${BACKEND_PORT:-3001}"
+    volumes:
+      # Mount database directory for persistence
+      - ./data:/app/data
+      # Optional: Mount credentials file (create if needed)
+      # - ./credentials.json:/app/credentials.json:ro
+    environment:
+      - PORT=${BACKEND_PORT:-3001}
+      - DEBUG=False
+      - DATABASE_PATH=/app/data/inventory.db
+      # Allow all origins for development
+      - CORS_ORIGINS=*
+      - HOST=0.0.0.0
+      # Set to true to skip background pollers (faster startup for testing)
+      - MINIMAL_MODE=false
+      # ADK Agent URL (AI agent running on host machine)
+      # Mac/Windows: Use host.docker.internal, Linux: Use host IP or service name
+      - ADK_URL=${ADK_URL:-http://host.docker.internal:8000}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-3001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - ixia-network
+
+  # Frontend - Vite Dev Server (with hot reload)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: ixia-frontend:latest
+    container_name: ixia-frontend
+    ports:
+      - "${FRONTEND_PORT:-5174}:${FRONTEND_PORT:-5174}"
+    environment:
+      - PORT=${FRONTEND_PORT:-5174}
+      # Backend URL: Use Docker service name 'backend' when in docker-compose network
+      - VITE_BACKEND_URL=http://backend:${BACKEND_PORT:-3001}
+      # ADK URL for display in error messages (optional)
+      - VITE_ADK_URL=${VITE_ADK_URL:-http://localhost:8000}
+      - NODE_ENV=development
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ixia-network
+
+networks:
+  ixia-network:
+    driver: bridge
+
+volumes:
+  ixia-data:
+    driver: local
+

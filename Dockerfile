@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Stage 1: Build frontend
-FROM --platform=$BUILDPLATFORM node:18-alpine AS frontend-builder
+FROM node:18-alpine AS frontend-builder
 WORKDIR /app
 
 # Copy package files
@@ -23,20 +23,20 @@ COPY tsconfig.json* ./
 RUN npm run build
 
 # Stage 2: Python backend
-FROM --platform=$BUILDPLATFORM python:3.11-slim AS backend
+FROM python:3.11-slim AS backend
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and uv (fast Python package installer)
 RUN apt-get update && apt-get install -y \
     procps \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install uv
 
-# Install Python dependencies
+# Install Python dependencies using uv (much faster than pip for complex deps)
 COPY requirements.txt ./
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
+RUN uv pip install --system --no-cache -r requirements.txt
 
 # Copy application files
 COPY . .

@@ -49,7 +49,32 @@ else:
         allow_headers=["*"],
     )
 
+@app.get("/api")
+async def api_info():
+    return {"message": "Ixia Inventory Explorer API", "version": "2.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+# API routes - Register BEFORE the frontend catch-all
+from app.api import chassis, cards, ports, licenses, sensors, performance, config, tags, poll, logs, ixnetwork_servers
+
+# Register routers
+app.include_router(chassis.router)
+app.include_router(cards.router)
+app.include_router(ports.router)
+app.include_router(licenses.router)
+app.include_router(sensors.router)
+app.include_router(performance.router)
+app.include_router(config.router)
+app.include_router(tags.router)
+app.include_router(poll.router)
+app.include_router(logs.router)
+app.include_router(ixnetwork_servers.router)
+
 # Mount frontend static files (built React app)
+# IMPORTANT: This catch-all route must be registered AFTER all API routes
 if os.path.exists("dist"):
     # Mount assets directory
     if os.path.exists("dist/assets"):
@@ -81,30 +106,6 @@ if os.path.exists("dist"):
         
         raise HTTPException(status_code=404)
 
-@app.get("/api")
-async def api_info():
-    return {"message": "Ixia Inventory Explorer API", "version": "2.0.0"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-
-# API routes
-from app.api import chassis, cards, ports, licenses, sensors, performance, config, tags, poll, logs, ixnetwork_servers
-
-# Register routers
-app.include_router(chassis.router)
-app.include_router(cards.router)
-app.include_router(ports.router)
-app.include_router(licenses.router)
-app.include_router(sensors.router)
-app.include_router(performance.router)
-app.include_router(config.router)
-app.include_router(tags.router)
-app.include_router(poll.router)
-app.include_router(logs.router)
-app.include_router(ixnetwork_servers.router)
-
 # ADK Proxy Route
 # ================
 import httpx
@@ -112,7 +113,11 @@ from fastapi import Request, Response
 
 @app.api_route("/adk/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_adk(path: str, request: Request):
-    adk_url = f"http://localhost:8000/{path}"
+    # ADK URL is configurable via environment variable
+    # Default: http://localhost:8000 (for local development)
+    # In Docker: Use host.docker.internal:8000 (Mac/Windows) or host IP (Linux)
+    adk_base_url = os.getenv("ADK_URL", "http://localhost:8000")
+    adk_url = f"{adk_base_url.rstrip('/')}/{path}"
     
     # Get request body
     body = await request.body()

@@ -3,7 +3,15 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // Docker-specific Vite config
-// Uses Docker service names for backend communication
+// Backend URL can be configured via VITE_BACKEND_URL environment variable
+// Default: http://backend:3001 (for docker-compose with service name 'backend')
+// For standalone: http://host.docker.internal:3001 (Mac/Windows) or host IP (Linux)
+const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://backend:3001'
+const FRONTEND_PORT = parseInt(process.env.PORT || '5174', 10)
+
+console.log('[Vite Config] Backend URL:', BACKEND_URL)
+console.log('[Vite Config] Frontend Port:', FRONTEND_PORT)
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -15,12 +23,11 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0', // Allow external connections (required for Docker)
-    port: 5174,
+    port: FRONTEND_PORT,
     strictPort: true, // Fail if port is already in use
     proxy: {
       '/api': {
-        // In Docker, use the service name 'backend'
-        target: 'http://backend:3001',
+        target: BACKEND_URL,
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -33,12 +40,12 @@ export default defineConfig({
             }
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Proxying:', req.method, req.url);
+            console.log('Proxying:', req.method, req.url, '->', BACKEND_URL);
           });
         },
       },
       '/adk': {
-        target: 'http://backend:3001',
+        target: BACKEND_URL,
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
@@ -46,7 +53,7 @@ export default defineConfig({
             console.log('ADK Proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Proxying ADK:', req.method, req.url);
+            console.log('Proxying ADK:', req.method, req.url, '->', BACKEND_URL);
           });
         },
       },

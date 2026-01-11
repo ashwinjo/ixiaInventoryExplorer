@@ -1,5 +1,23 @@
 version: '3.8'
 
+# =============================================================================
+# PRODUCTION Docker Compose - Single Container (Frontend + Backend combined)
+# =============================================================================
+# App: http://localhost:8080 (or custom PORT)
+# API: http://localhost:8080/api
+# Docs: http://localhost:8080/docs
+# =============================================================================
+#
+# Usage:
+#   docker-compose up -d
+#   docker-compose logs -f
+#   docker-compose down
+#
+# Custom port:
+#   PORT=3000 docker-compose up -d
+#
+# =============================================================================
+
 services:
   ixia-inventory-explorer:
     build:
@@ -25,13 +43,15 @@ services:
       # CORS - use "*" to allow all origins (deployment agnostic)
       - CORS_ORIGINS=*
       - HOST=0.0.0.0
+      # Set to true to skip background pollers (for testing)
+      - MINIMAL_MODE=false
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
 volumes:
   ixia-data:
