@@ -122,9 +122,6 @@ create_ixnetwork_user_db_table = """CREATE TABLE IF NOT EXISTS ixnetwork_user_db
 # Stores polled data from IxNetwork API Servers
 create_ixnetwork_api_server_details_table = """CREATE TABLE IF NOT EXISTS ixnetwork_api_server_details (
                                 ixnetwork_api_server_ip VARCHAR(255) NOT NULL,
-                                ixnetwork_api_server_type TEXT,
                                 ixnetwork_api_server_sessions TEXT,
-                                ixnetwork_api_server_running_sessions TEXT,
-                                ixnetwork_api_server_idle_sessions TEXT,
                                 lastUpdatedAt_UTC TEXT
                                 );"""

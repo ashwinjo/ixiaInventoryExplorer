@@ -7,6 +7,7 @@ import LicensesPage from '@/pages/LicensesPage'
 import SensorsPage from '@/pages/SensorsPage'
 import PerformancePage from '@/pages/PerformancePage'
 import ConfigPage from '@/pages/ConfigPage'
+import IxNetworkServersPage from '@/pages/IxNetworkServersPage'
 
 function AppRoutes() {
   return (
@@ -14,6 +15,7 @@ function AppRoutes() {
       <Route path="/" element={<Layout />}>
         <Route index element={<ChassisPage />} />
         <Route path="chassis" element={<ChassisPage />} />
+        <Route path="ixnetwork" element={<IxNetworkServersPage />} />
         <Route path="cards" element={<CardsPage />} />
         <Route path="ports" element={<PortsPage />} />
         <Route path="licenses" element={<LicensesPage />} />

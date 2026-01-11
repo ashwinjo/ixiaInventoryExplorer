@@ -172,20 +172,14 @@ class IxNetworkConfigListResponse(BaseModel):
 class IxNetworkServerDetails(BaseModel):
     """IxNetwork API Server polled details"""
     ixnetwork_api_server_ip: str = Field(..., description="API Server IP address")
-    ixnetwork_api_server_type: str = Field(..., description="API Server type (Linux/Windows)")
     ixnetwork_api_server_sessions: str = Field(..., description="Total number of sessions")
-    ixnetwork_api_server_running_sessions: str = Field(..., description="Number of running sessions")
-    ixnetwork_api_server_idle_sessions: str = Field(..., description="Number of idle sessions")
-    lastUpdatedAt_UTC: str = Field(..., description="Last update timestamp in UTC")
+    lastUpdatedAt_UTC: str = Field("", description="Last update timestamp in UTC")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "ixnetwork_api_server_ip": "192.168.1.100",
-                "ixnetwork_api_server_type": "Linux",
                 "ixnetwork_api_server_sessions": "10",
-                "ixnetwork_api_server_running_sessions": "5",
-                "ixnetwork_api_server_idle_sessions": "5",
                 "lastUpdatedAt_UTC": "2024-01-01 12:00:00"
             }
         }
@@ -202,10 +196,7 @@ class IxNetworkServerDetailsListResponse(BaseModel):
                 "servers": [
                     {
                         "ixnetwork_api_server_ip": "192.168.1.100",
-                        "ixnetwork_api_server_type": "Linux",
                         "ixnetwork_api_server_sessions": "10",
-                        "ixnetwork_api_server_running_sessions": "5",
-                        "ixnetwork_api_server_idle_sessions": "5",
                         "lastUpdatedAt_UTC": "2024-01-01 12:00:00"
                     }
                 ],

@@ -697,14 +697,10 @@ async def write_ixnetwork_server_details_to_database(records: List[Dict]):
             # Insert new records
             for record in records:
                 await conn.execute("""INSERT INTO ixnetwork_api_server_details 
-                    (ixnetwork_api_server_ip, ixnetwork_api_server_type, ixnetwork_api_server_sessions,
-                    ixnetwork_api_server_running_sessions, ixnetwork_api_server_idle_sessions, lastUpdatedAt_UTC) 
-                    VALUES (?, ?, ?, ?, ?, datetime('now'))""",
+                    (ixnetwork_api_server_ip, ixnetwork_api_server_sessions, lastUpdatedAt_UTC) 
+                    VALUES (?, ?, datetime('now'))""",
                     (record["ixnetwork_api_server_ip"], 
-                     record.get("ixnetwork_api_server_type", "Unknown"),
-                     record.get("ixnetwork_api_server_sessions", "0"),
-                     record.get("ixnetwork_api_server_running_sessions", "0"),
-                     record.get("ixnetwork_api_server_idle_sessions", "0")))
+                     record.get("ixnetwork_api_server_sessions", "0")))
             
             await conn.commit()
         except Exception as e:

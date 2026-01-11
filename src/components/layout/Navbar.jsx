@@ -11,20 +11,24 @@ import { Sun, Moon } from 'lucide-react'
 
 const navigation = [
   { name: 'Chassis', href: '/chassis', color: 'cyan' },
+  { name: 'IxNetwork API Servers', href: '/ixnetwork', color: 'fuchsia' },
   { name: 'Cards', href: '/cards', color: 'teal' },
   { name: 'Ports', href: '/ports', color: 'violet' },
   { name: 'Licenses', href: '/licenses', color: 'amber' },
   { name: 'Sensors', href: '/sensors', color: 'emerald' },
-  { name: 'Performance', href: '/performance', color: 'rose' },
 ]
 
-const configNavItem = { name: 'Add/Delete Chassis', href: '/config', color: 'sky' }
+const configNavItem = { name: '[ADD | DELETE ] Chassis / IxN API Servers', href: '/config', color: 'sky' }
 
 // Bright, vibrant color palette for navigation with enhanced visibility
 const colorClasses = {
   cyan: {
     active: 'text-cyan-200 border-cyan-200 bg-cyan-500/25 font-bold',
     inactive: 'text-cyan-300/95 hover:text-cyan-200 hover:border-cyan-200 hover:bg-cyan-500/15'
+  },
+  fuchsia: {
+    active: 'text-fuchsia-200 border-fuchsia-200 bg-fuchsia-500/25 font-bold',
+    inactive: 'text-fuchsia-300/95 hover:text-fuchsia-200 hover:border-fuchsia-200 hover:bg-fuchsia-500/15'
   },
   teal: {
     active: 'text-teal-200 border-teal-200 bg-teal-500/25 font-bold',
@@ -98,6 +102,7 @@ function Navbar() {
                 // Define glow effect styles for active items
                 const glowStyles = {
                   cyan: { boxShadow: '0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.3)' },
+                  fuchsia: { boxShadow: '0 0 15px rgba(217, 70, 239, 0.6), 0 0 30px rgba(217, 70, 239, 0.3)' },
                   teal: { boxShadow: '0 0 15px rgba(20, 184, 166, 0.6), 0 0 30px rgba(20, 184, 166, 0.3)' },
                   violet: { boxShadow: '0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.3)' },
                   amber: { boxShadow: '0 0 15px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.3)' },

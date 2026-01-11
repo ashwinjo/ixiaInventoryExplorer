@@ -90,7 +90,7 @@ async def health_check():
     return {"status": "healthy"}
 
 # API routes
-from app.api import chassis, cards, ports, licenses, sensors, performance, config, tags, poll, logs
+from app.api import chassis, cards, ports, licenses, sensors, performance, config, tags, poll, logs, ixnetwork_servers
 
 # Register routers
 app.include_router(chassis.router)
@@ -103,6 +103,7 @@ app.include_router(config.router)
 app.include_router(tags.router)
 app.include_router(poll.router)
 app.include_router(logs.router)
+app.include_router(ixnetwork_servers.router)
 
 # ADK Proxy Route
 # ================

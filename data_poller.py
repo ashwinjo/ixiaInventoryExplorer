@@ -15,7 +15,11 @@ from app.database import (
 )
 import IxOSRestAPICaller as ixOSRestCaller
 from RestApi.IxOSRestInterface import IxRestSession
-import IxNetworkRestAPICaller as ixNetworkRestCaller
+from ixnetwork_restpy.testplatform.testplatform import TestPlatform 
+import urllib3
+
+# Disable SSL warnings for self-signed certificates
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 async def fetch_chassis_summary_for_one(chassis: Dict, retry_count: int = 3) -> Dict:
@@ -353,30 +357,27 @@ async def delete_half_metric_records_weekly():
 # IxNetwork API Server Polling Functions
 # =====================================================================
 
+
 async def fetch_ixnetwork_server_for_one(server: Dict, retry_count: int = 3) -> Dict:
     """Fetch IxNetwork API server session data for a single server with retry logic"""
     def _sync_fetch():
+        import requests
         from requests.exceptions import Timeout, ConnectionError as RequestsConnectionError
         
         last_exception = None
         for attempt in range(retry_count):
             try:
-                # Create session - try standalone first, then onchassis
-                session = ixNetworkRestCaller.IxNRestSessions(
-                    server["ip"], 
-                    username=server["username"], 
-                    password=server["password"],
-                    ixnetwork_server_type="standalone",
-                    verbose=False,
-                    timeout=30
-                )
-                out = ixNetworkRestCaller.get_ixnetwork_session_summary(session, server["ip"])
-                if attempt > 0:
-                    print(f"[POLL] IxNetwork Server {server['ip']} succeeded on retry attempt {attempt + 1}")
-                return out
+                # Fetch session summary from IxNetwork server
+                test_platform = TestPlatform(server["ip"], rest_port=443)
+                test_platform.Authenticate(server["username"], server["password"])
+                session_count = str(len(test_platform.Sessions.find()))
+                return {
+                    "ixnetwork_api_server_ip": server["ip"],
+                    "ixnetwork_api_server_sessions": session_count,
+                }
             except Timeout as e:
                 last_exception = e
-                error_msg = f"Timeout after {30}s"
+                error_msg = f"Timeout after 30s"
                 print(f"[POLL] IxNetwork Server {server['ip']} attempt {attempt + 1}/{retry_count}: {error_msg}")
                 if attempt < retry_count - 1:
                     wait_time = 2 * (attempt + 1)
@@ -402,10 +403,7 @@ async def fetch_ixnetwork_server_for_one(server: Dict, retry_count: int = 3) -> 
         print(f"[POLL] IxNetwork Server {server['ip']} FAILED after {retry_count} attempts. Last error: {type(last_exception).__name__ if last_exception else 'Unknown'}")
         return {
             "ixnetwork_api_server_ip": server["ip"],
-            "ixnetwork_api_server_type": "Not Reachable",
             "ixnetwork_api_server_sessions": "0",
-            "ixnetwork_api_server_running_sessions": "0",
-            "ixnetwork_api_server_idle_sessions": "0"
         }
     
     # Run the synchronous REST call in a thread pool to avoid blocking
@@ -424,12 +422,12 @@ async def get_ixnetwork_server_data():
         list_of_servers = await asyncio.gather(*tasks)
         
         # Log results
-        successful = [s for s in list_of_servers if s.get("ixnetwork_api_server_type") != "Not Reachable"]
-        failed = [s for s in list_of_servers if s.get("ixnetwork_api_server_type") == "Not Reachable"]
-        print(f"[POLL] IxNetwork server fetch completed: {len(successful)} successful, {len(failed)} failed")
+        successful = [s for s in list_of_servers if s.get("ixnetwork_api_server_sessions") != "0"]
+        failed = [s for s in list_of_servers if s.get("ixnetwork_api_server_sessions") == "0"]
+        print(f"[POLL] IxNetwork server fetch completed: {len(successful)} successful, {len(failed)} unreachable/empty")
         if failed:
             failed_ips = [s["ixnetwork_api_server_ip"] for s in failed]
-            print(f"[POLL] Failed IxNetwork server IPs: {', '.join(failed_ips)}")
+            print(f"[POLL] Unreachable IxNetwork server IPs: {', '.join(failed_ips)}")
         
         # Write to database
         await write_ixnetwork_server_details_to_database(records=list_of_servers)

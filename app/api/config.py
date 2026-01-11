@@ -8,13 +8,12 @@ from app.models.config import (
     ChassisConfigListResponse, ChassisConfigItem,
     IxNetworkCredentialsUploadRequest, IxNetworkCredentialsUploadResponse, 
     IxNetworkConfigListResponse, IxNetworkConfigItem,
-    IxNetworkServerDetailsListResponse, IxNetworkServerDetails
 )
 from app.database import (
     write_username_password_to_database, write_polling_intervals_into_database, 
     is_input_in_correct_format, read_username_password_from_database,
     write_ixnetwork_credentials_to_database, read_ixnetwork_credentials_from_database, 
-    is_ixnetwork_input_in_correct_format, read_ixnetwork_server_details_from_database
+    is_ixnetwork_input_in_correct_format
 )
 
 router = APIRouter(prefix="/api/config", tags=["config"])
@@ -201,24 +200,3 @@ async def upload_ixnetwork_config(request: IxNetworkCredentialsUploadRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading IxNetwork API Server configuration: {str(e)}")
 
-
-@router.get("/ixnetwork-server-details", response_model=IxNetworkServerDetailsListResponse)
-async def get_ixnetwork_server_details():
-    """Get polled IxNetwork API Server details (sessions info)"""
-    try:
-        records = await read_ixnetwork_server_details_from_database()
-        server_list = [
-            IxNetworkServerDetails(
-                ixnetwork_api_server_ip=record["ixnetwork_api_server_ip"],
-                ixnetwork_api_server_type=record.get("ixnetwork_api_server_type", "Unknown"),
-                ixnetwork_api_server_sessions=record.get("ixnetwork_api_server_sessions", "0"),
-                ixnetwork_api_server_running_sessions=record.get("ixnetwork_api_server_running_sessions", "0"),
-                ixnetwork_api_server_idle_sessions=record.get("ixnetwork_api_server_idle_sessions", "0"),
-                lastUpdatedAt_UTC=record.get("lastUpdatedAt_UTC", "")
-            )
-            for record in records
-        ]
-        
-        return IxNetworkServerDetailsListResponse(servers=server_list, count=len(server_list))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching IxNetwork server details: {str(e)}")
