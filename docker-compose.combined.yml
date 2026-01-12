@@ -45,6 +45,12 @@ services:
       - HOST=0.0.0.0
       # Set to true to skip background pollers (for testing)
       - MINIMAL_MODE=false
+      # Set to true to remove existing database on container start (clean start)
+      # Default: false (preserves data across container restarts)
+      - CLEAN_DB_ON_START=${CLEAN_DB_ON_START:-false}
+      # ADK Agent URL (AI agent running on host machine)
+      # Mac/Windows: Use host.docker.internal, Linux: Use host IP or service name
+      - ADK_URL=${ADK_URL:-http://host.docker.internal:8000}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]

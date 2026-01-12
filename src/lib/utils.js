@@ -77,3 +77,60 @@ export function exportToCSV(data, headers, filename) {
   document.body.removeChild(link)
 }
 
+/**
+ * Format lastUpdatedAt_UTC timestamp for display
+ * @param {string} timestamp - UTC timestamp string
+ * @returns {string} Formatted date string or 'N/A'
+ */
+export function formatLastPolled(timestamp) {
+  if (!timestamp) return 'N/A'
+  
+  try {
+    // Handle different timestamp formats
+    let date
+    if (timestamp.includes('T')) {
+      // ISO format: 2024-01-11T12:30:45
+      date = new Date(timestamp)
+    } else if (timestamp.includes(',')) {
+      // Format: 1/11/2024, 12:30:45
+      date = new Date(timestamp)
+    } else {
+      // Format: 2024-01-11 12:30:45
+      date = new Date(timestamp.replace(' ', 'T'))
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'N/A'
+    }
+    
+    // Format: "Jan 11, 2024 at 12:30 PM"
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  } catch (e) {
+    return 'N/A'
+  }
+}
+
+/**
+ * Get last polled timestamp from data array
+ * @param {Array} dataList - Array of data objects
+ * @returns {string} Formatted timestamp or 'N/A'
+ */
+export function getLastPolledTime(dataList) {
+  if (!dataList || dataList.length === 0) {
+    return 'N/A'
+  }
+  
+  // Get first record's lastUpdatedAt_UTC
+  const firstRecord = dataList[0]
+  const timestamp = firstRecord?.lastUpdatedAt_UTC || firstRecord?.lastUpdatedAt || null
+  
+  return formatLastPolled(timestamp)
+}
+

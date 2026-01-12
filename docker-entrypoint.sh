@@ -24,15 +24,37 @@ mkdir -p "$DB_DIR" 2>/dev/null || true
 # Change to app directory
 cd /app
 
+# Check if we should start with a clean database
+if [ "${CLEAN_DB_ON_START:-false}" = "true" ]; then
+    echo "[INIT] CLEAN_DB_ON_START=true - Removing existing database..."
+    rm -f "$DB_PATH" "/app/inventory.db" 2>/dev/null || true
+    # Also remove WAL and SHM files if they exist
+    rm -f "${DB_PATH}-wal" "${DB_PATH}-shm" "/app/inventory.db-wal" "/app/inventory.db-shm" 2>/dev/null || true
+    echo "[INIT] Existing database removed - starting fresh"
+fi
+
 # Initialize database if it doesn't exist
 if [ ! -f "$DB_PATH" ]; then
     echo "[INIT] Initializing database at $DB_PATH..."
+    # Set DATABASE_PATH environment variable for init_db.py
+    export DATABASE_PATH="$DB_PATH"
     python3 /app/init_db.py
     if [ -f "/app/inventory.db" ] && [ "$DB_PATH" != "/app/inventory.db" ]; then
         mv /app/inventory.db "$DB_PATH"
         echo "[INIT] Database created and moved to $DB_PATH"
     else
         echo "[INIT] Database initialized"
+    fi
+    # Ensure WAL mode is set (init_db.py should have done this, but verify)
+    if [ -f "$DB_PATH" ]; then
+        python3 -c "
+import sqlite3
+conn = sqlite3.connect('$DB_PATH')
+conn.execute('PRAGMA journal_mode=WAL;')
+conn.commit()
+conn.close()
+print('[INIT] Verified WAL mode is enabled')
+" 2>/dev/null || true
     fi
 fi
 
@@ -71,6 +93,10 @@ SENSORS_PID=$!
 
 python3 /app/data_poller.py --category=data_purge &
 PURGE_PID=$!
+    sleep 1
+
+python3 /app/data_poller.py --category=ixnetwork &
+IXNETWORK_PID=$!
 
     echo "[INIT] Background polling processes started"
 else
@@ -80,7 +106,7 @@ fi
 # Function to handle shutdown
 cleanup() {
     echo "[SHUTDOWN] Shutting down background processes..."
-    kill $CHASSIS_PID $CARDS_PID $PORTS_PID $LICENSING_PID $PERF_PID $SENSORS_PID $PURGE_PID 2>/dev/null || true
+    kill $CHASSIS_PID $CARDS_PID $PORTS_PID $LICENSING_PID $PERF_PID $SENSORS_PID $PURGE_PID $IXNETWORK_PID 2>/dev/null || true
     wait
     exit 0
 }

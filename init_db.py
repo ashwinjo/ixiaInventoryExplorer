@@ -13,6 +13,7 @@ chassis_memory_utilization
 
 import sqlite3
 from sqlite3 import Error
+import os
 import db_queries
 
 
@@ -25,9 +26,14 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        # Enable WAL mode for better concurrency and performance
+        # This allows multiple readers and one writer simultaneously
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.commit()
+        print(f"[INIT] Database created with WAL mode: {db_file}")
         return conn
     except Error as e:
-        print(e)
+        print(f"[INIT] Error creating database connection: {e}")
 
     return conn
 
@@ -66,7 +72,9 @@ def create_table(conn, create_table_sql):
 
 
 def create_data_tables():
-    database = "inventory.db"            
+    # Use DATABASE_PATH environment variable if set, otherwise default to inventory.db
+    database = os.getenv("DATABASE_PATH", "inventory.db")
+    print(f"[INIT] Creating database at: {database}")
     # create a database connection
     conn = create_connection(database)
 
@@ -91,5 +99,11 @@ def create_data_tables():
         # IxNetwork API Server tables
         create_table(conn, db_queries.create_ixnetwork_user_db_table)
         create_table(conn, db_queries.create_ixnetwork_api_server_details_table)
+        
+        # Close the connection
+        conn.close()
+        print(f"[INIT] Database tables created successfully")
+    else:
+        print("[INIT] Error: Could not create database connection")
 
 create_data_tables()

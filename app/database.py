@@ -30,8 +30,8 @@ async def get_db_connection(timeout: float = 30.0):
     return conn
 
 
-async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_dict: Optional[Dict] = None):
-    """Write polled data inside sqlite3 DB with proper error handling"""
+async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_dict: Optional[Dict] = None, max_retries: int = 3, retry_count: int = 0):
+    """Write polled data inside sqlite3 DB with proper error handling and retry logic for locking"""
     # Use semaphore to serialize writes and prevent database locking
     async with _db_write_semaphore:
         conn = None
@@ -70,9 +70,14 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                     
                     chassis_to_skip = set()
                     for existing in existing_failed:
+                        # Row objects support dictionary-like access
                         ip = existing["ip"]
                         last_updated_str = existing["lastUpdatedAt_UTC"]
-                        status = existing.get("status_status", "")
+                        # Safely access status_status (Row objects support dict-like access)
+                        try:
+                            status = existing["status_status"]
+                        except (KeyError, AttributeError, IndexError):
+                            status = ""
                         
                         # Only preserve if status was good (not "Not Reachable") and data is recent
                         if status != "Not Reachable" and status and last_updated_str:
@@ -200,6 +205,27 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                     await conn.rollback()
                 except Exception:
                     pass
+            
+            # Handle SQLite locking errors - retry with exponential backoff
+            error_str = str(e).lower()
+            if ("locking" in error_str or "database is locked" in error_str or 
+                ("operationalerror" in error_str and "locking" in error_str)):
+                retry_count += 1
+                if retry_count < max_retries:
+                    wait_time = 0.5 * retry_count  # Exponential backoff: 0.5s, 1s, 1.5s
+                    print(f"[DB] Database locking error for {table_name}, retrying in {wait_time}s ({retry_count}/{max_retries})...")
+                    await asyncio.sleep(wait_time)
+                    # Close connection before retry
+                    if conn:
+                        try:
+                            await conn.close()
+                        except Exception:
+                            pass
+                    # Retry the entire write operation
+                    return await write_data_to_database(table_name, records, ip_tags_dict, max_retries, retry_count)
+                else:
+                    print(f"[DB] Database locking error persisted after {max_retries} retries for {table_name}: {e}")
+            
             raise e
         finally:
             if conn:

@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { exportToCSV } from '@/lib/utils'
+import { exportToCSV, getLastPolledTime } from '@/lib/utils'
 
 function SensorsPage() {
   const { data, loading, error, refetch } = useApi(getSensors)
@@ -239,7 +239,12 @@ function SensorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">Sensor Information</h1>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">Sensor Information</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Last Polled at: <span className="text-teal-400 font-mono">{getLastPolledTime(sensorsList)}</span>
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button
             onClick={handleExport}

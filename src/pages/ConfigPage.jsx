@@ -27,6 +27,8 @@ function ConfigPage() {
     ports: 60,
     sensors: 60,
     licensing: 120,
+    perf: 60,
+    purge: 86400,
   })
   const { mutate: uploadMutate, loading: uploadLoading } = useMutation(uploadConfig)
   const { mutate: uploadIxNetworkMutate, loading: ixNetworkLoading } = useMutation(uploadIxNetworkServerConfig)
@@ -147,6 +149,8 @@ function ConfigPage() {
         ports: intervals.ports,
         sensors: intervals.sensors,
         licensing: intervals.licensing,
+        perf: intervals.perf,
+        purge: intervals.purge,
       },
       {
         onSuccess: () => {
@@ -180,6 +184,8 @@ DELETE,192.168.1.200,admin,admin`
     { key: 'ports', label: 'Ports Polling Interval', description: 'Interval for polling port data (seconds)' },
     { key: 'sensors', label: 'Sensors Polling Interval', description: 'Interval for polling sensor data (seconds)' },
     { key: 'licensing', label: 'Licensing Polling Interval', description: 'Interval for polling license data (seconds)' },
+    { key: 'perf', label: 'Performance Polling Interval', description: 'Interval for polling performance metrics (seconds)' },
+    { key: 'purge', label: 'Data Purge Interval', description: 'Interval for purging old data (seconds, typically 86400 = 24 hours)' },
   ]
 
   return (
@@ -427,7 +433,9 @@ DELETE,192.168.1.200,admin,admin`
                         {field.description}
                       </p>
                       <p className="text-[10px] text-teal-400/60 font-mono">
-                        Current: {Math.floor(intervals[field.key] / 60)} minutes
+                        {field.key === 'purge' 
+                          ? `Current: ${Math.floor(intervals[field.key] / 3600)} hours`
+                          : `Current: ${Math.floor(intervals[field.key] / 60)} minutes`}
                       </p>
                     </div>
                   ))}
@@ -446,6 +454,8 @@ DELETE,192.168.1.200,admin,admin`
                         ports: 60,
                         sensors: 60,
                         licensing: 120,
+                        perf: 60,
+                        purge: 86400,
                       })
                     }}
                     className="border-white/10 hover:bg-white/5"
