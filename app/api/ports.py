@@ -24,6 +24,20 @@ async def get_ports():
             except (ValueError, TypeError):
                 return None
         
+        # Helper function to handle portNumber as either int or string (for fullyQualifiedPortName like "4.2")
+        def to_port_number(value):
+            if value is None or value == '' or value == 'NA':
+                return None
+            # If it's already a string that looks like a fully qualified name (e.g., "4.2"), return as-is
+            if isinstance(value, str) and '.' in value:
+                return value
+            # Try to convert to int, but if it fails, return as string
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                # If conversion fails, return as string (might be a fully qualified name)
+                return str(value) if value else None
+        
         # Transform records to response format
         port_list = []
         for record in records:
@@ -31,7 +45,7 @@ async def get_ports():
                 "chassisIp": record["chassisIp"],
                 "typeOfChassis": record["typeOfChassis"],
                 "cardNumber": to_int_or_none(record.get("cardNumber")),
-                "portNumber": to_int_or_none(record.get("portNumber")),
+                "portNumber": to_port_number(record.get("portNumber")),
                 "linkState": record.get("linkState", "NA"),
                 "phyMode": record.get("phyMode", "NA"),
                 "transceiverModel": record.get("transceiverModel", "NA"),

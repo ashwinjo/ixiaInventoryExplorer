@@ -130,7 +130,17 @@ def get_chassis_ports_information(session, chassisIp, chassisType):
     last_update_at = datetime.now(timezone.utc).strftime("%m/%d/%Y, %H:%M:%S")
     port_list = session.get_ports().data
     
-    keys_to_keep = ['owner', 'transceiverModel', 'transceiverManufacturer', 'cardNumber', 'portNumber', 'phyMode', 'linkState', 'speed', 'type', 'transmitState']
+    keys_to_keep = ['owner', 
+                    'transceiverModel', 
+                    'transceiverManufacturer',
+                    'fullyQualifiedPortName',
+                    'cardNumber', 
+                    'portNumber', 
+                    'phyMode', 
+                    'linkState', 
+                    'speed', 
+                    'type', 
+                    'transmitState']
 
     if port_list:
         a = list(port_list[0].keys())
@@ -147,6 +157,13 @@ def get_chassis_ports_information(session, chassisIp, chassisType):
     
     for port in port_list:
         port_data_list.append(port)
+    
+    # Use fullyQualifiedPortName as portNumber if it exists and has a value
+    for port_data_list_item in port_data_list:
+        fully_qualified_name = port_data_list_item.get('fullyQualifiedPortName')
+        # Check if fullyQualifiedPortName exists, is not None, not empty, and not "N/A"
+        if fully_qualified_name and fully_qualified_name != "N/A" and str(fully_qualified_name).strip():
+            port_data_list_item['portNumber'] = fully_qualified_name
     
     # Lets get used ports, free ports and total ports
     if port_data_list:

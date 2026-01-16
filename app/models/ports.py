@@ -2,7 +2,7 @@
 Pydantic models for Ports endpoints
 """
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class PortResponse(BaseModel):
@@ -10,7 +10,7 @@ class PortResponse(BaseModel):
     chassisIp: str = Field(..., description="Chassis IP address")
     typeOfChassis: str = Field(..., description="Type of chassis")
     cardNumber: Optional[int] = Field(None, description="Card number")
-    portNumber: Optional[int] = Field(None, description="Port number")
+    portNumber: Optional[Union[int, str]] = Field(None, description="Port number (can be integer or fully qualified name like '4.2')")
     linkState: str = Field(..., description="Link state")
     phyMode: str = Field(..., description="Physical mode")
     transceiverModel: str = Field(..., description="Transceiver model")
