@@ -361,7 +361,33 @@ async def get_chassis_type_from_ip(chassisIp: str) -> str:
     
 
 async def write_username_password_to_database(list_of_un_pw: str):
-    """Write user information about ixia servers into database"""
+    """Write user information about ixia servers into database
+    
+    When DELETE operations are detected, also deletes all chassis inventory data
+    from all related tables.
+    """
+    # First, identify chassis IPs that need to be deleted from inventory
+    chassis_to_delete = []
+    config = list_of_un_pw.split("\n")
+    for item in config:
+        if item:
+            parts = item.split(",")
+            if len(parts) == 4:
+                operation, ip, un, pw = parts
+                if operation.strip().upper() == "DELETE":
+                    chassis_to_delete.append(ip.strip())
+    
+    # Delete chassis inventory data for each DELETE operation
+    # Do this before updating credentials to ensure consistency
+    for chassis_ip in chassis_to_delete:
+        try:
+            await delete_chassis_from_database(chassis_ip)
+            print(f"[CONFIG] Deleted chassis inventory data for {chassis_ip}")
+        except Exception as e:
+            # Log error but continue - chassis might not exist in inventory yet
+            print(f"[CONFIG] Warning: Could not delete inventory data for {chassis_ip}: {e}")
+    
+    # Now update credentials as before
     async with _db_write_semaphore:
         conn = None
         try:
@@ -528,6 +554,90 @@ async def delete_half_data_from_performance_metric_table():
                 LIMIT (SELECT COUNT(*)/2 FROM chassis_utilization_details))"""
             await conn.execute(query)
             await conn.commit()
+        except Exception as e:
+            if conn:
+                try:
+                    await conn.rollback()
+                except Exception:
+                    pass
+            raise e
+        finally:
+            if conn:
+                try:
+                    await conn.close()
+                except Exception:
+                    pass
+
+
+async def delete_chassis_from_database(chassis_ip: str) -> Dict[str, int]:
+    """Delete a chassis and all related data from all tables
+    
+    Args:
+        chassis_ip: IP address of the chassis to delete
+        
+    Returns:
+        Dictionary with deletion counts per table
+    """
+    async with _db_write_semaphore:
+        conn = None
+        deletion_counts = {}
+        try:
+            conn = await get_db_connection()
+            
+            # Delete from all tables that reference chassis IP
+            # Order matters: delete child records first, then parent
+            
+            # 1. Delete utilization details (performance metrics)
+            cursor = await conn.execute(
+                "DELETE FROM chassis_utilization_details WHERE chassisIp = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["chassis_utilization_details"] = cursor.rowcount
+            
+            # 2. Delete port details
+            cursor = await conn.execute(
+                "DELETE FROM chassis_port_details WHERE chassisIp = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["chassis_port_details"] = cursor.rowcount
+            
+            # 3. Delete sensor details
+            cursor = await conn.execute(
+                "DELETE FROM chassis_sensor_details WHERE chassisIp = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["chassis_sensor_details"] = cursor.rowcount
+            
+            # 4. Delete license details
+            cursor = await conn.execute(
+                "DELETE FROM license_details_records WHERE chassisIp = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["license_details_records"] = cursor.rowcount
+            
+            # 5. Delete card details
+            cursor = await conn.execute(
+                "DELETE FROM chassis_card_details WHERE chassisIp = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["chassis_card_details"] = cursor.rowcount
+            
+            # 6. Delete chassis summary details
+            cursor = await conn.execute(
+                "DELETE FROM chassis_summary_details WHERE ip = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["chassis_summary_details"] = cursor.rowcount
+            
+            # 7. Delete user IP tags (if any)
+            cursor = await conn.execute(
+                "DELETE FROM user_ip_tags WHERE ip = ?",
+                (chassis_ip,)
+            )
+            deletion_counts["user_ip_tags"] = cursor.rowcount
+            
+            await conn.commit()
+            return deletion_counts
         except Exception as e:
             if conn:
                 try:

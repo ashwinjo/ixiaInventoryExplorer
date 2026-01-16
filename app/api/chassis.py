@@ -4,7 +4,7 @@ Chassis API endpoints
 from fastapi import APIRouter, HTTPException
 from typing import List
 from app.models.chassis import ChassisResponse, ChassisListResponse
-from app.database import read_data_from_database, read_tags
+from app.database import read_data_from_database, read_tags, delete_chassis_from_database
 
 router = APIRouter(prefix="/api/chassis", tags=["chassis"])
 
@@ -61,4 +61,38 @@ async def get_chassis():
         return {"chassis": list_of_chassis, "count": len(list_of_chassis)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching chassis data: {str(e)}")
+
+
+@router.delete("/{chassis_ip}")
+async def delete_chassis(chassis_ip: str):
+    """Delete a chassis and all related data from the database"""
+    try:
+        # Check if chassis exists
+        records = await read_data_from_database(table_name="chassis_summary_details")
+        chassis_exists = any(record["ip"] == chassis_ip for record in records)
+        
+        if not chassis_exists:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Chassis with IP {chassis_ip} not found"
+            )
+        
+        # Delete all related data
+        deletion_counts = await delete_chassis_from_database(chassis_ip)
+        
+        total_deleted = sum(deletion_counts.values())
+        
+        return {
+            "message": f"Chassis {chassis_ip} and all related data deleted successfully",
+            "chassis_ip": chassis_ip,
+            "deletion_counts": deletion_counts,
+            "total_records_deleted": total_deleted
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting chassis {chassis_ip}: {str(e)}"
+        )
 
