@@ -399,7 +399,7 @@ select option { background: var(--surface-alt); color: var(--text); }
   pointer-events: all;
   background: var(--surface-raised);
   border: 1px solid var(--border-med);
-  border-left: 3px solid var(--cyan);
+  border-left: 3px solid var(--green);
   border-radius: var(--radius);
   padding: 9px 14px;
   max-width: 340px;

@@ -16,7 +16,7 @@ function ToastItem({ id, title, description, variant, onOpenChange }) {
   return (
     <div
       ref={ref}
-      className={`ks-toast ${isError ? 'toast-error' : ''}`}
+      className={`ks-toast ${isError ? 'toast-error' : 'toast-success'}`}
       onClick={() => onOpenChange && onOpenChange(false)}
       role="alert"
     >
