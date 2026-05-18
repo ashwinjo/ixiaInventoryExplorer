@@ -36,7 +36,7 @@ fi
 # If Docker creates it on first run it will be root:root and the container's
 # appuser (UID 1000) cannot write the SQLite file.
 mkdir -p ./data
-chmod 755 ./data
+chmod 777 ./data
 
 # Step 1: Stop and remove existing containers
 echo ""
