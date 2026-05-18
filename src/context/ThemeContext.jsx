@@ -5,9 +5,9 @@ const ThemeContext = createContext(undefined)
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('ixia-theme') || 'dark'
+      return localStorage.getItem('ixia-theme') || 'day'
     }
-    return 'dark'
+    return 'day'
   })
 
   useEffect(() => {

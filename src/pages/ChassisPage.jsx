@@ -404,118 +404,48 @@ function ChassisPage() {
                 )}
               </div>
               
-              {/* Column-based filter dropdowns */}
-              <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
-                <Select
-                  value={filters.chassisIp || 'all'}
-                  onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
-                  className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by IP Address"
-                >
-                  <option value="all">Select All (IP)</option>
-                  {columnValues.chassisIp.map((ip) => (
-                    <option key={ip} value={ip}>{ip}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.os || 'all'}
-                  onChange={(e) => handleFilterChange('os', e.target.value)}
-                  className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by OS"
-                >
-                  <option value="all">Select All (OS)</option>
-                  {columnValues.os.map((os) => (
-                    <option key={os} value={os}>{os}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.chassisType || 'all'}
-                  onChange={(e) => handleFilterChange('chassisType', e.target.value)}
-                  className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Type"
-                >
-                  <option value="all">Select All (Type)</option>
-                  {columnValues.chassisType.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.chassisSerialNumber || 'all'}
-                  onChange={(e) => handleFilterChange('chassisSerialNumber', e.target.value)}
-                  className="min-w-[130px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Chassis Serial Number"
-                >
-                  <option value="all">Select All (Chassis SN)</option>
-                  {columnValues.chassisSerialNumber.map((sn) => (
-                    <option key={sn} value={sn}>{sn}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.controllerSerialNumber || 'all'}
-                  onChange={(e) => handleFilterChange('controllerSerialNumber', e.target.value)}
-                  className="min-w-[130px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Controller Serial Number"
-                >
-                  <option value="all">Select All (Controller SN)</option>
-                  {columnValues.controllerSerialNumber.map((sn) => (
-                    <option key={sn} value={sn}>{sn}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.physicalCardsNumber || 'all'}
-                  onChange={(e) => handleFilterChange('physicalCardsNumber', e.target.value)}
-                  className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Physical Cards"
-                >
-                  <option value="all">Select All (Cards)</option>
-                  {columnValues.physicalCardsNumber.map((cards) => (
-                    <option key={cards} value={cards}>{cards}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.IxOS || 'all'}
-                  onChange={(e) => handleFilterChange('IxOS', e.target.value)}
-                  className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by IxOS"
-                >
-                  <option value="all">Select All (IxOS)</option>
-                  {columnValues.IxOS.map((ixos) => (
-                    <option key={ixos} value={ixos}>{ixos}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.cpu_pert_usage || 'all'}
-                  onChange={(e) => handleFilterChange('cpu_pert_usage', e.target.value)}
-                  className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by CPU %"
-                >
-                  <option value="all">Select All (CPU %)</option>
-                  {columnValues.cpu_pert_usage.map((cpu) => (
-                    <option key={cpu} value={cpu}>{cpu}%</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.chassisStatus || 'all'}
-                  onChange={(e) => handleFilterChange('chassisStatus', e.target.value)}
-                  className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Status"
-                >
-                  <option value="all">Select All (Status)</option>
-                  {columnValues.chassisStatus.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </Select>
-                <Select
-                  value={filters.tags || 'all'}
-                  onChange={(e) => handleFilterChange('tags', e.target.value)}
-                  className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                  title="Filter by Tags"
-                >
-                  <option value="all">Select All (Tags)</option>
-                  {columnValues.tags.map((tag) => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
-                </Select>
+              {/* Column filters — labeled */}
+              <div className="flex gap-3 pt-3 overflow-x-auto pb-1" style={{ borderTop: '1px solid var(--border-k)' }}>
+                {[
+                  { key: 'chassisIp',            label: 'IP Address',      values: columnValues.chassisIp,            render: v => v },
+                  { key: 'os',                   label: 'OS',              values: columnValues.os,                   render: v => v },
+                  { key: 'chassisType',          label: 'Type',            values: columnValues.chassisType,          render: v => v },
+                  { key: 'chassisSerialNumber',  label: 'Chassis SN',      values: columnValues.chassisSerialNumber,  render: v => v },
+                  { key: 'controllerSerialNumber',label: 'Controller SN',  values: columnValues.controllerSerialNumber,render: v => v },
+                  { key: 'physicalCardsNumber',  label: 'Cards',           values: columnValues.physicalCardsNumber,  render: v => v },
+                  { key: 'IxOS',                 label: 'IxOS',            values: columnValues.IxOS,                 render: v => v },
+                  { key: 'cpu_pert_usage',       label: 'CPU %',           values: columnValues.cpu_pert_usage,       render: v => `${v}%` },
+                  { key: 'chassisStatus',        label: 'Status',          values: columnValues.chassisStatus,        render: v => v },
+                  { key: 'tags',                 label: 'Tags',            values: columnValues.tags,                 render: v => v },
+                ].map(({ key, label, values, render }) => {
+                  const active = !!filters[key]
+                  return (
+                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: '0.60rem',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: active ? 'var(--cyan)' : 'var(--text-dim)',
+                        transition: 'color 150ms ease',
+                        userSelect: 'none',
+                      }}>
+                        {label}{active ? ' ●' : ''}
+                      </span>
+                      <Select
+                        value={filters[key] || 'all'}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: '110px', padding: '4px 8px', fontSize: '0.72rem' }}
+                      >
+                        <option value="all">All</option>
+                        {values.map((v) => (
+                          <option key={v} value={v}>{render(v)}</option>
+                        ))}
+                      </Select>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </CardHeader>

@@ -327,117 +327,38 @@ function LicensesPage() {
             </div>
             
             {/* Column-based filter dropdowns */}
-            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
-              <Select
-                value={filters.chassisIp || 'all'}
-                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis IP"
-              >
-                <option value="all">Select All (IP)</option>
-                {columnValues.chassisIp.map((ip) => (
-                  <option key={ip} value={ip}>{ip}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.typeOfChassis || 'all'}
-                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis Type"
-              >
-                <option value="all">Select All (Type)</option>
-                {columnValues.typeOfChassis.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.hostId || 'all'}
-                onChange={(e) => handleFilterChange('hostId', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Host ID"
-              >
-                <option value="all">Select All (Host ID)</option>
-                {columnValues.hostId.map((hostId) => (
-                  <option key={hostId} value={hostId}>{hostId}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.partNumber || 'all'}
-                onChange={(e) => handleFilterChange('partNumber', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Part Number"
-              >
-                <option value="all">Select All (Part #)</option>
-                {columnValues.partNumber.map((part) => (
-                  <option key={part} value={part}>{part}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.activationCode || 'all'}
-                onChange={(e) => handleFilterChange('activationCode', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Activation Code"
-              >
-                <option value="all">Select All (Code)</option>
-                {columnValues.activationCode.map((code) => (
-                  <option key={code} value={code}>{code}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.quantity || 'all'}
-                onChange={(e) => handleFilterChange('quantity', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Quantity"
-              >
-                <option value="all">Select All (Qty)</option>
-                {columnValues.quantity.map((qty) => (
-                  <option key={qty} value={qty}>{qty}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.description || 'all'}
-                onChange={(e) => handleFilterChange('description', e.target.value)}
-                className="min-w-[150px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Description"
-              >
-                <option value="all">Select All (Desc)</option>
-                {columnValues.description.map((desc) => (
-                  <option key={desc} value={desc}>{desc}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.maintenanceDate || 'all'}
-                onChange={(e) => handleFilterChange('maintenanceDate', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Maintenance Date"
-              >
-                <option value="all">Select All (Maint)</option>
-                {columnValues.maintenanceDate.map((date) => (
-                  <option key={date} value={date}>{date}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.expiryDate || 'all'}
-                onChange={(e) => handleFilterChange('expiryDate', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Expiry Date"
-              >
-                <option value="all">Select All (Expiry)</option>
-                {columnValues.expiryDate.map((date) => (
-                  <option key={date} value={date}>{date}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.status || 'all'}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Status"
-              >
-                <option value="all">Select All (Status)</option>
-                {columnValues.status.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </Select>
+            <div className="flex gap-3 pt-3 border-t border-border/40 overflow-x-auto pb-2" style={{ borderColor: 'var(--border-k)' }}>
+              {[
+                { key: 'chassisIp',      label: 'IP Address',   values: columnValues.chassisIp,      render: v => v },
+                { key: 'typeOfChassis',  label: 'Chassis Type', values: columnValues.typeOfChassis,  render: v => v },
+                { key: 'hostId',         label: 'Host ID',      values: columnValues.hostId,         render: v => v },
+                { key: 'partNumber',     label: 'Part #',       values: columnValues.partNumber,     render: v => v },
+                { key: 'activationCode', label: 'Activation',   values: columnValues.activationCode, render: v => v },
+                { key: 'quantity',       label: 'Quantity',     values: columnValues.quantity,       render: v => v },
+                { key: 'description',    label: 'Description',  values: columnValues.description,    render: v => v },
+                { key: 'maintenanceDate',label: 'Maint. Date',  values: columnValues.maintenanceDate,render: v => v },
+                { key: 'expiryDate',     label: 'Expiry Date',  values: columnValues.expiryDate,     render: v => v },
+                { key: 'status',         label: 'Status',       values: columnValues.status,         render: v => v },
+              ].map(({ key, label, values, render }) => {
+                const active = !!filters[key]
+                return (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: '0.60rem', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      color: active ? 'var(--cyan)' : 'var(--text-dim)',
+                      transition: 'color 150ms ease',
+                    }}>
+                      {label}{active ? ' ●' : ''}
+                    </span>
+                    <Select value={filters[key] || 'all'} onChange={(e) => handleFilterChange(key, e.target.value)}
+                      style={{ minWidth: '110px', padding: '4px 8px', fontSize: '0.72rem' }}>
+                      <option value="all">All</option>
+                      {values.map((v) => <option key={v} value={v}>{render(v)}</option>)}
+                    </Select>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </CardHeader>

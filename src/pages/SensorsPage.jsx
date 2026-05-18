@@ -288,73 +288,34 @@ function SensorsPage() {
             </div>
             
             {/* Column-based filter dropdowns */}
-            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
-              <Select
-                value={filters.chassisIp || 'all'}
-                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis IP"
-              >
-                <option value="all">Select All (IP)</option>
-                {columnValues.chassisIp.map((ip) => (
-                  <option key={ip} value={ip}>{ip}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.typeOfChassis || 'all'}
-                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis Type"
-              >
-                <option value="all">Select All (Type)</option>
-                {columnValues.typeOfChassis.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.sensorType || 'all'}
-                onChange={(e) => handleFilterChange('sensorType', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Sensor Type"
-              >
-                <option value="all">Select All (Sensor Type)</option>
-                {columnValues.sensorType.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.sensorName || 'all'}
-                onChange={(e) => handleFilterChange('sensorName', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Sensor Name"
-              >
-                <option value="all">Select All (Name)</option>
-                {columnValues.sensorName.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.sensorValue || 'all'}
-                onChange={(e) => handleFilterChange('sensorValue', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Sensor Value"
-              >
-                <option value="all">Select All (Value)</option>
-                {columnValues.sensorValue.map((value) => (
-                  <option key={value} value={value}>{value}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.unit || 'all'}
-                onChange={(e) => handleFilterChange('unit', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Unit"
-              >
-                <option value="all">Select All (Unit)</option>
-                {columnValues.unit.map((unit) => (
-                  <option key={unit} value={unit}>{unit}</option>
-                ))}
-              </Select>
+            <div className="flex gap-3 pt-3 border-t border-border/40 overflow-x-auto pb-2" style={{ borderColor: 'var(--border-k)' }}>
+              {[
+                { key: 'chassisIp',    label: 'IP Address',   values: columnValues.chassisIp,    render: v => v },
+                { key: 'typeOfChassis',label: 'Chassis Type', values: columnValues.typeOfChassis,render: v => v },
+                { key: 'sensorType',   label: 'Sensor Type',  values: columnValues.sensorType,   render: v => v },
+                { key: 'sensorName',   label: 'Sensor Name',  values: columnValues.sensorName,   render: v => v },
+                { key: 'sensorValue',  label: 'Value',        values: columnValues.sensorValue,  render: v => v },
+                { key: 'unit',         label: 'Unit',         values: columnValues.unit,         render: v => v },
+              ].map(({ key, label, values, render }) => {
+                const active = !!filters[key]
+                return (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: '0.60rem', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      color: active ? 'var(--cyan)' : 'var(--text-dim)',
+                      transition: 'color 150ms ease',
+                    }}>
+                      {label}{active ? ' ●' : ''}
+                    </span>
+                    <Select value={filters[key] || 'all'} onChange={(e) => handleFilterChange(key, e.target.value)}
+                      style={{ minWidth: '110px', padding: '4px 8px', fontSize: '0.72rem' }}>
+                      <option value="all">All</option>
+                      {values.map((v) => <option key={v} value={v}>{render(v)}</option>)}
+                    </Select>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </CardHeader>

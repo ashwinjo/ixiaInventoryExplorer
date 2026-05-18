@@ -18,6 +18,14 @@ import { useToast } from '@/hooks/use-toast'
 import { exportToCSV, getLastPolledTime } from '@/lib/utils'
 import { StatusBadge } from '@/components/ui/status-badge'
 
+function mbpsToGbps(speed) {
+  if (speed === null || speed === undefined || speed === 'NA' || speed === 'N/A' || speed === '') return 'N/A'
+  const mbps = parseFloat(speed)
+  if (isNaN(mbps)) return speed
+  const gbps = mbps / 1000
+  return `${gbps % 1 === 0 ? gbps.toFixed(0) : gbps} Gbps`
+}
+
 function PortsPage() {
   const { data, loading, error, refetch } = useApi(getPorts)
   const { mutate: pollMutate } = useMutation(pollPorts)
@@ -226,7 +234,7 @@ function PortsPage() {
       { key: 'portNumber', label: 'Port Number' },
       { key: 'linkState', label: 'Link State' },
       { key: 'owner', label: 'Owner' },
-      { key: 'speed', label: 'Speed' },
+      { key: 'speed', label: 'Speed (Gbps)' },
       { key: 'type', label: 'Type' },
       { key: 'transceiverModel', label: 'Transceiver Model' },
       { key: 'transceiverManufacturer', label: 'Transceiver Manufacturer' },
@@ -239,7 +247,7 @@ function PortsPage() {
       portNumber: port.portNumber ?? 'N/A',
       linkState: port.linkState,
       owner: port.owner,
-      speed: port.speed,
+      speed: mbpsToGbps(port.speed),
       type: port.type,
       transceiverModel: port.transceiverModel,
       transceiverManufacturer: port.transceiverManufacturer,
@@ -320,117 +328,38 @@ function PortsPage() {
             </div>
             
             {/* Column-based filter dropdowns */}
-            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
-              <Select
-                value={filters.chassisIp || 'all'}
-                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis IP"
-              >
-                <option value="all">Select All (IP)</option>
-                {columnValues.chassisIp.map((ip) => (
-                  <option key={ip} value={ip}>{ip}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.typeOfChassis || 'all'}
-                onChange={(e) => handleFilterChange('typeOfChassis', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis Type"
-              >
-                <option value="all">Select All (Type)</option>
-                {columnValues.typeOfChassis.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.cardNumber || 'all'}
-                onChange={(e) => handleFilterChange('cardNumber', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Card Number"
-              >
-                <option value="all">Select All (Card)</option>
-                {columnValues.cardNumber.map((num) => (
-                  <option key={num} value={num}>{num}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.portNumber || 'all'}
-                onChange={(e) => handleFilterChange('portNumber', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Port Number"
-              >
-                <option value="all">Select All (Port)</option>
-                {columnValues.portNumber.map((num) => (
-                  <option key={num} value={num}>{num}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.linkState || 'all'}
-                onChange={(e) => handleFilterChange('linkState', e.target.value)}
-                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Link State"
-              >
-                <option value="all">Select All (State)</option>
-                {columnValues.linkState.map((state) => (
-                  <option key={state} value={state}>{state}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.owner || 'all'}
-                onChange={(e) => handleFilterChange('owner', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Owner"
-              >
-                <option value="all">Select All (Owner)</option>
-                {columnValues.owner.map((owner) => (
-                  <option key={owner} value={owner}>{owner}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.speed || 'all'}
-                onChange={(e) => handleFilterChange('speed', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Speed"
-              >
-                <option value="all">Select All (Speed)</option>
-                {columnValues.speed.map((speed) => (
-                  <option key={speed} value={speed}>{speed}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.type || 'all'}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Type"
-              >
-                <option value="all">Select All (Type)</option>
-                {columnValues.type.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.transceiverModel || 'all'}
-                onChange={(e) => handleFilterChange('transceiverModel', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Transceiver Model"
-              >
-                <option value="all">Select All (Model)</option>
-                {columnValues.transceiverModel.map((model) => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.transceiverManufacturer || 'all'}
-                onChange={(e) => handleFilterChange('transceiverManufacturer', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Transceiver Manufacturer"
-              >
-                <option value="all">Select All (Mfr)</option>
-                {columnValues.transceiverManufacturer.map((mfr) => (
-                  <option key={mfr} value={mfr}>{mfr}</option>
-                ))}
-              </Select>
+            <div className="flex gap-3 pt-3 border-t border-border/40 overflow-x-auto pb-2" style={{ borderColor: 'var(--border-k)' }}>
+              {[
+                { key: 'chassisIp',              label: 'IP Address',   values: columnValues.chassisIp,              render: v => v },
+                { key: 'typeOfChassis',          label: 'Chassis Type', values: columnValues.typeOfChassis,          render: v => v },
+                { key: 'cardNumber',             label: 'Card #',       values: columnValues.cardNumber,             render: v => v },
+                { key: 'portNumber',             label: 'Port #',       values: columnValues.portNumber,             render: v => v },
+                { key: 'linkState',              label: 'Link State',   values: columnValues.linkState,              render: v => v },
+                { key: 'owner',                  label: 'Owner',        values: columnValues.owner,                  render: v => v },
+                { key: 'speed',                  label: 'Speed',        values: columnValues.speed,                  render: v => mbpsToGbps(v) },
+                { key: 'type',                   label: 'Port Type',    values: columnValues.type,                   render: v => v },
+                { key: 'transceiverModel',       label: 'Xcvr Model',   values: columnValues.transceiverModel,       render: v => v },
+                { key: 'transceiverManufacturer',label: 'Xcvr Mfr',    values: columnValues.transceiverManufacturer,render: v => v },
+              ].map(({ key, label, values, render }) => {
+                const active = !!filters[key]
+                return (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: '0.60rem', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      color: active ? 'var(--cyan)' : 'var(--text-dim)',
+                      transition: 'color 150ms ease',
+                    }}>
+                      {label}{active ? ' ●' : ''}
+                    </span>
+                    <Select value={filters[key] || 'all'} onChange={(e) => handleFilterChange(key, e.target.value)}
+                      style={{ minWidth: '110px', padding: '4px 8px', fontSize: '0.72rem' }}>
+                      <option value="all">All</option>
+                      {values.map((v) => <option key={v} value={v}>{render(v)}</option>)}
+                    </Select>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </CardHeader>
@@ -458,7 +387,7 @@ function PortsPage() {
                     Owner{getSortIcon('owner')}
                   </TableHead>
                   <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('speed')}>
-                    Speed{getSortIcon('speed')}
+                    Speed (Gbps){getSortIcon('speed')}
                   </TableHead>
                   <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('type')}>
                     Type{getSortIcon('type')}
@@ -489,7 +418,7 @@ function PortsPage() {
                         <StatusBadge status={port.linkState} />
                       </TableCell>
                       <TableCell>{port.owner}</TableCell>
-                      <TableCell>{port.speed}</TableCell>
+                      <TableCell>{mbpsToGbps(port.speed)}</TableCell>
                       <TableCell>{port.type}</TableCell>
                       <TableCell>{port.transceiverModel}</TableCell>
                       <TableCell>{port.transceiverManufacturer}</TableCell>

@@ -1,18 +1,16 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useTheme } from '@/context/ThemeContext'
-import { Sun, Moon } from 'lucide-react'
 
 const navigation = [
   { name: 'Chassis', href: '/chassis' },
-  { name: 'IxNetwork API Servers', href: '/ixnetwork' },
   { name: 'Cards', href: '/cards' },
   { name: 'Ports', href: '/ports' },
   { name: 'Licenses', href: '/licenses' },
   { name: 'Sensors', href: '/sensors' },
 ]
 
-const configNavItem = { name: '[ADD | DELETE] Chassis / IxN API Servers', href: '/config' }
+const configNavItem = { name: '[ADD | DELETE] Chassis', href: '/config' }
 
 export default function Navbar() {
   const location = useLocation()
@@ -167,35 +165,57 @@ export default function Navbar() {
             {configNavItem.name}
           </Link>
 
-          {/* Theme toggle */}
+          {/* Day/Night slider */}
           <button
             onClick={toggleTheme}
             title={isDark ? 'Switch to day mode' : 'Switch to dark mode'}
             aria-label={isDark ? 'Switch to day mode' : 'Switch to dark mode'}
             style={{
-              padding: '6px',
-              borderRadius: '6px',
-              border: '1px solid rgba(255,255,255,0.18)',
-              background: 'rgba(255,255,255,0.06)',
-              color: 'rgba(255,255,255,0.80)',
+              position: 'relative',
+              width: '56px',
+              height: '26px',
+              borderRadius: '13px',
+              border: '1px solid rgba(255,255,255,0.22)',
+              background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.20)',
               cursor: 'pointer',
+              padding: 0,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 150ms ease, border-color 150ms ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.30)'
-              e.currentTarget.style.color = '#ffffff'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'
-              e.currentTarget.style.color = 'rgba(255,255,255,0.80)'
+              flexShrink: 0,
+              transition: 'background 200ms ease, border-color 200ms ease',
             }}
           >
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            {/* Sun icon (left) */}
+            <span style={{
+              position: 'absolute',
+              left: '5px',
+              fontSize: '11px',
+              lineHeight: 1,
+              opacity: isDark ? 0.35 : 0.90,
+              transition: 'opacity 200ms ease',
+              userSelect: 'none',
+            }}>☀️</span>
+            {/* Moon icon (right) */}
+            <span style={{
+              position: 'absolute',
+              right: '5px',
+              fontSize: '11px',
+              lineHeight: 1,
+              opacity: isDark ? 0.90 : 0.35,
+              transition: 'opacity 200ms ease',
+              userSelect: 'none',
+            }}>🌙</span>
+            {/* Thumb */}
+            <span style={{
+              position: 'absolute',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              background: '#ffffff',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.40)',
+              left: isDark ? '32px' : '3px',
+              transition: 'left 200ms ease',
+            }} />
           </button>
         </div>
       </div>

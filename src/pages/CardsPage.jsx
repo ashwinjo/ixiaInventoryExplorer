@@ -360,95 +360,36 @@ function CardsPage() {
             </div>
             
             {/* Column-based filter dropdowns */}
-            <div className="flex gap-2 pt-3 border-t border-border/40 overflow-x-auto pb-2">
-              <Select
-                value={filters.chassisIp || 'all'}
-                onChange={(e) => handleFilterChange('chassisIp', e.target.value)}
-                className="min-w-[140px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis IP"
-              >
-                <option value="all">Select All (IP)</option>
-                {columnValues.chassisIp.map((ip) => (
-                  <option key={ip} value={ip}>{ip}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.chassisType || 'all'}
-                onChange={(e) => handleFilterChange('chassisType', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Chassis Type"
-              >
-                <option value="all">Select All (Type)</option>
-                {columnValues.chassisType.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.cardNumber || 'all'}
-                onChange={(e) => handleFilterChange('cardNumber', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Card Number"
-              >
-                <option value="all">Select All (Card #)</option>
-                {columnValues.cardNumber.map((num) => (
-                  <option key={num} value={num}>{num}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.serialNumber || 'all'}
-                onChange={(e) => handleFilterChange('serialNumber', e.target.value)}
-                className="min-w-[130px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Serial Number"
-              >
-                <option value="all">Select All (Serial)</option>
-                {columnValues.serialNumber.map((sn) => (
-                  <option key={sn} value={sn}>{sn}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.cardType || 'all'}
-                onChange={(e) => handleFilterChange('cardType', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Card Type"
-              >
-                <option value="all">Select All (Card Type)</option>
-                {columnValues.cardType.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.cardState || 'all'}
-                onChange={(e) => handleFilterChange('cardState', e.target.value)}
-                className="min-w-[110px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Card State"
-              >
-                <option value="all">Select All (State)</option>
-                {columnValues.cardState.map((state) => (
-                  <option key={state} value={state}>{state}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.numberOfPorts || 'all'}
-                onChange={(e) => handleFilterChange('numberOfPorts', e.target.value)}
-                className="min-w-[100px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Number of Ports"
-              >
-                <option value="all">Select All (Ports)</option>
-                {columnValues.numberOfPorts.map((ports) => (
-                  <option key={ports} value={ports}>{ports}</option>
-                ))}
-              </Select>
-              <Select
-                value={filters.tags || 'all'}
-                onChange={(e) => handleFilterChange('tags', e.target.value)}
-                className="min-w-[120px] text-xs bg-muted/60 border-cyan-500/30"
-                title="Filter by Tags"
-              >
-                <option value="all">Select All (Tags)</option>
-                {columnValues.tags.map((tag) => (
-                  <option key={tag} value={tag}>{tag}</option>
-                ))}
-              </Select>
+            <div className="flex gap-3 pt-3 border-t border-border/40 overflow-x-auto pb-2" style={{ borderColor: 'var(--border-k)' }}>
+              {[
+                { key: 'chassisIp',    label: 'IP Address',   values: columnValues.chassisIp,    render: v => v },
+                { key: 'chassisType',  label: 'Chassis Type', values: columnValues.chassisType,  render: v => v },
+                { key: 'cardNumber',   label: 'Card #',       values: columnValues.cardNumber,   render: v => v },
+                { key: 'serialNumber', label: 'Serial #',     values: columnValues.serialNumber, render: v => v },
+                { key: 'cardType',     label: 'Card Type',    values: columnValues.cardType,     render: v => v },
+                { key: 'cardState',    label: 'State',        values: columnValues.cardState,    render: v => v },
+                { key: 'numberOfPorts',label: 'Ports',        values: columnValues.numberOfPorts,render: v => v },
+                { key: 'tags',         label: 'Tags',         values: columnValues.tags,         render: v => v },
+              ].map(({ key, label, values, render }) => {
+                const active = !!filters[key]
+                return (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: '0.60rem', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      color: active ? 'var(--cyan)' : 'var(--text-dim)',
+                      transition: 'color 150ms ease',
+                    }}>
+                      {label}{active ? ' ●' : ''}
+                    </span>
+                    <Select value={filters[key] || 'all'} onChange={(e) => handleFilterChange(key, e.target.value)}
+                      style={{ minWidth: '110px', padding: '4px 8px', fontSize: '0.72rem' }}>
+                      <option value="all">All</option>
+                      {values.map((v) => <option key={v} value={v}>{render(v)}</option>)}
+                    </Select>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </CardHeader>

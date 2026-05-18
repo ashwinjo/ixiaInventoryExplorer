@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useMutation } from '@/hooks/use-api'
-import { uploadConfig, setPollingIntervals, resetDatabase, uploadIxNetworkServerConfig } from '@/lib/api/endpoints'
+import { uploadConfig, setPollingIntervals, resetDatabase } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
-import { Trash2, AlertTriangle, Server } from 'lucide-react'
+import { Trash2, AlertTriangle } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,6 @@ import {
 
 function ConfigPage() {
   const [configText, setConfigText] = useState('')
-  const [apiServerConfigText, setApiServerConfigText] = useState('')
   const [intervals, setIntervals] = useState({
     chassis: 60,
     cards: 60,
@@ -31,201 +30,110 @@ function ConfigPage() {
     purge: 86400,
   })
   const { mutate: uploadMutate, loading: uploadLoading } = useMutation(uploadConfig)
-  const { mutate: uploadIxNetworkMutate, loading: ixNetworkLoading } = useMutation(uploadIxNetworkServerConfig)
   const { mutate: intervalsMutate, loading: intervalsLoading } = useMutation(setPollingIntervals)
   const { mutate: resetMutate, loading: resetLoading } = useMutation(resetDatabase)
   const { toast } = useToast()
 
   const handleConfigSubmit = (e) => {
     e.preventDefault()
-
     if (!configText.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter configuration data',
-      })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please enter configuration data' })
       return
     }
-
-    uploadMutate(
-      { text: configText },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Success',
-            description: 'Configuration uploaded successfully',
-          })
-          setConfigText('')
-        },
-        onError: (error) => {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: error.response?.data?.detail || 'Failed to upload configuration',
-          })
-        },
-      }
-    )
+    uploadMutate({ text: configText }, {
+      onSuccess: () => {
+        toast({ title: 'Success', description: 'Configuration uploaded successfully' })
+        setConfigText('')
+      },
+      onError: (error) => {
+        toast({ variant: 'destructive', title: 'Error', description: error.response?.data?.detail || 'Failed to upload configuration' })
+      },
+    })
   }
 
   const handleResetDB = () => {
     resetMutate(null, {
-      onSuccess: () => {
-        toast({
-          title: 'Database Reset',
-          description: 'All records have been successfully deleted',
-        })
-      },
-      onError: (error) => {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: error.response?.data?.detail || 'Failed to reset database',
-        })
-      }
+      onSuccess: () => toast({ title: 'Database Reset', description: 'All records have been successfully deleted' }),
+      onError: (error) => toast({ variant: 'destructive', title: 'Error', description: error.response?.data?.detail || 'Failed to reset database' }),
     })
   }
 
-  const handleIxNetworkSubmit = (e) => {
-    e.preventDefault()
-
-    if (!apiServerConfigText.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter IxNetwork API Server configuration data',
-      })
-      return
-    }
-
-    uploadIxNetworkMutate(
-      { text: apiServerConfigText },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Success',
-            description: 'IxNetwork API Server configuration uploaded successfully',
-          })
-          setApiServerConfigText('')
-        },
-        onError: (error) => {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: error.response?.data?.detail || 'Failed to upload IxNetwork API Server configuration',
-          })
-        },
-      }
-    )
-  }
-
   const handleIntervalsChange = (field, value) => {
-    const numValue = parseInt(value) || 0
-    setIntervals((prev) => ({
-      ...prev,
-      [field]: numValue,
-    }))
+    setIntervals((prev) => ({ ...prev, [field]: parseInt(value) || 0 }))
   }
 
   const handleIntervalsSubmit = (e) => {
     e.preventDefault()
-
-    // Validate all intervals are positive
-    const hasInvalid = Object.values(intervals).some((val) => val <= 0)
-    if (hasInvalid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'All intervals must be greater than 0',
-      })
+    if (Object.values(intervals).some((val) => val <= 0)) {
+      toast({ variant: 'destructive', title: 'Error', description: 'All intervals must be greater than 0' })
       return
     }
-
-    intervalsMutate(
-      {
-        chassis: intervals.chassis,
-        cards: intervals.cards,
-        ports: intervals.ports,
-        sensors: intervals.sensors,
-        licensing: intervals.licensing,
-        perf: intervals.perf,
-        purge: intervals.purge,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Success',
-            description: 'Polling intervals updated successfully',
-          })
-        },
-        onError: (error) => {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: error.response?.data?.detail || 'Failed to update polling intervals',
-          })
-        },
-      }
-    )
+    intervalsMutate(intervals, {
+      onSuccess: () => toast({ title: 'Success', description: 'Polling intervals updated successfully' }),
+      onError: (error) => toast({ variant: 'destructive', title: 'Error', description: error.response?.data?.detail || 'Failed to update polling intervals' }),
+    })
   }
 
   const exampleConfig = `ADD,192.168.1.100,admin,password
 ADD,192.168.1.101,admin,password
 DELETE,192.168.1.100,admin,password`
 
-  const exampleIxNetworkConfig = `ADD,192.168.1.200,admin,admin
-ADD,192.168.1.201,admin,admin
-DELETE,192.168.1.200,admin,admin`
-
   const intervalFields = [
-    { key: 'chassis', label: 'Chassis Polling Interval', description: 'Interval for polling chassis data (seconds)' },
-    { key: 'cards', label: 'Cards Polling Interval', description: 'Interval for polling card data (seconds)' },
-    { key: 'ports', label: 'Ports Polling Interval', description: 'Interval for polling port data (seconds)' },
-    { key: 'sensors', label: 'Sensors Polling Interval', description: 'Interval for polling sensor data (seconds)' },
-    { key: 'licensing', label: 'Licensing Polling Interval', description: 'Interval for polling license data (seconds)' },
-    { key: 'perf', label: 'Performance Polling Interval', description: 'Interval for polling performance metrics (seconds)' },
-    { key: 'purge', label: 'Data Purge Interval', description: 'Interval for purging old data (seconds, typically 86400 = 24 hours)' },
+    { key: 'chassis',   label: 'Chassis',     description: 'Chassis data polling (seconds)' },
+    { key: 'cards',     label: 'Cards',        description: 'Card data polling (seconds)' },
+    { key: 'ports',     label: 'Ports',        description: 'Port data polling (seconds)' },
+    { key: 'sensors',   label: 'Sensors',      description: 'Sensor data polling (seconds)' },
+    { key: 'licensing', label: 'Licensing',    description: 'License data polling (seconds)' },
+    { key: 'perf',      label: 'Performance',  description: 'Performance metrics polling (seconds)' },
+    { key: 'purge',     label: 'Data Purge',   description: 'Old data purge interval (86400 = 24h)' },
   ]
+
+  const textareaStyle = {
+    width: '100%',
+    minHeight: '120px',
+    borderRadius: 'var(--radius-lg)',
+    border: '1px solid var(--border-med)',
+    background: 'var(--surface-alt)',
+    padding: '8px 12px',
+    fontSize: '0.80rem',
+    color: 'var(--text)',
+    fontFamily: 'var(--font-mono)',
+    outline: 'none',
+    resize: 'vertical',
+  }
 
   return (
     <div className="space-y-8">
-      {/* Header with Reset Button */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">
-            Configuration
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage chassis and IxNetwork API server inventory
+          <h1 className="page-title">Configuration</h1>
+          <p className="mt-1" style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+            Manage chassis inventory and polling settings
           </p>
         </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="gap-2 shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all">
-              <Trash2 size={16} />
+            <Button variant="destructive">
+              <Trash2 size={14} />
               Reset DB
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-[#0f0f12] border-white/10">
+          <AlertDialogContent style={{ background: 'var(--surface)', border: '1px solid var(--border-med)', borderTop: '2px solid var(--crimson)' }}>
             <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2 text-red-500">
-                <AlertTriangle size={20} />
+              <AlertDialogTitle className="flex items-center gap-2" style={{ color: 'var(--crimson)' }}>
+                <AlertTriangle size={16} />
                 Are you absolutely sure?
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-400">
-                This action cannot be undone. This will permanently delete all configured chassis,
-                API servers, inventory records, tags, and performance metrics from the database.
+              <AlertDialogDescription style={{ color: 'var(--text-muted)' }}>
+                This action cannot be undone. Permanently deletes all configured chassis,
+                inventory records, tags, and performance metrics.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleResetDB}
-                className="bg-red-600 hover:bg-red-700 text-white border-none"
-                disabled={resetLoading}
-              >
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleResetDB} disabled={resetLoading}>
                 {resetLoading ? 'Resetting...' : 'Yes, Reset Database'}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -233,174 +141,77 @@ DELETE,192.168.1.200,admin,admin`
         </AlertDialog>
       </div>
 
-      {/* Side-by-side Configuration Sections */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Chassis Configuration */}
-        <Card className="border-cyan-500/20">
-          <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="">Chassis Configuration</CardTitle>
-            <CardDescription>
-              Add, delete, or update chassis in the inventory
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
-            <form onSubmit={handleConfigSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block text-slate-300">
-                  Configuration (CSV Format)
-                </label>
-                <textarea
-                  value={configText}
-                  onChange={(e) => setConfigText(e.target.value)}
-                  placeholder={exampleConfig}
-                  className="w-full min-h-[120px] rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-slate-200 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/50 transition-all font-mono"
-                  required
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" disabled={uploadLoading} className="bg-cyan-600 hover:bg-cyan-700">
-                  {uploadLoading ? 'Uploading...' : 'Upload'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setConfigText(exampleConfig)}
-                  className="border-white/10 hover:bg-white/5"
-                >
-                  Load Example
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setConfigText('')}
-                  className="text-slate-400 hover:text-white"
-                >
-                  Clear
-                </Button>
-              </div>
-            </form>
-            
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="font-semibold mb-2 text-xs uppercase tracking-widest" style={{color:"var(--text-muted)"}}>CSV Format:</h3>
-              <pre className="p-3 rounded-lg text-xs overflow-x-auto font-mono">
-                {exampleConfig}
-              </pre>
+      {/* Chassis Config */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Chassis Configuration</CardTitle>
+          <CardDescription>Add, delete, or update chassis in inventory</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          <form onSubmit={handleConfigSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-2" style={{ fontSize: '0.68rem', fontWeight: 400, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-dim)' }}>
+                Configuration (CSV Format)
+              </label>
+              <textarea
+                value={configText}
+                onChange={(e) => setConfigText(e.target.value)}
+                placeholder={exampleConfig}
+                style={textareaStyle}
+                required
+              />
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Operations:</h3>
-                <ul className="space-y-1 text-xs text-slate-400">
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-cyan-500 rounded-full"></div> <strong>ADD:</strong> New chassis</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-red-500 rounded-full"></div> <strong>DELETE:</strong> Remove</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-emerald-500 rounded-full"></div> <strong>UPDATE:</strong> Credentials</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Fields:</h3>
-                <ul className="space-y-1 text-xs text-slate-400">
-                  <li><strong>operation:</strong> Action</li>
-                  <li><strong>ip:</strong> IP address</li>
-                  <li><strong>username:</strong> Auth user</li>
-                  <li><strong>password:</strong> Auth pass</li>
-                </ul>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={uploadLoading}>
+                {uploadLoading ? 'Uploading...' : 'Upload'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setConfigText(exampleConfig)}>
+                Load Example
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setConfigText('')}>
+                Clear
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </form>
 
-        {/* IxNetwork API Server Configuration */}
-        <Card className="border-purple-500/20">
-          <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="flex items-center gap-2" style={{color:"var(--cyan)"}}>
-              <Server size={20} />
-              IxNetwork API Server Configuration
-            </CardTitle>
-            <CardDescription>
-              Add, delete, or update API server instances
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
-            <form onSubmit={handleIxNetworkSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block text-slate-300">
-                  Configuration (CSV Format)
-                </label>
-                <textarea
-                  value={apiServerConfigText}
-                  onChange={(e) => setApiServerConfigText(e.target.value)}
-                  placeholder={exampleIxNetworkConfig}
-                  className="w-full min-h-[120px] rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-slate-200 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500/50 transition-all font-mono"
-                  required
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" disabled={ixNetworkLoading} className="bg-purple-600 hover:bg-purple-700">
-                  {ixNetworkLoading ? 'Uploading...' : 'Upload'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setApiServerConfigText(exampleIxNetworkConfig)}
-                  className="border-white/10 hover:bg-white/5"
-                >
-                  Load Example
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setApiServerConfigText('')}
-                  className="text-slate-400 hover:text-white"
-                >
-                  Clear
-                </Button>
-              </div>
-            </form>
-            
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="font-semibold mb-2 text-xs uppercase tracking-widest" style={{color:"var(--text-muted)"}}>CSV Format:</h3>
-              <pre className="p-3 rounded-xl text-xs overflow-x-auto font-mono">
-                {exampleIxNetworkConfig}
-              </pre>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Operations:</h3>
-                <ul className="space-y-1 text-xs text-slate-400">
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-purple-500 rounded-full"></div> <strong>ADD:</strong> New server</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-red-500 rounded-full"></div> <strong>DELETE:</strong> Remove</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 bg-emerald-500 rounded-full"></div> <strong>UPDATE:</strong> Credentials</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2 text-white/40 text-[10px] uppercase tracking-widest">Fields:</h3>
-                <ul className="space-y-1 text-xs text-slate-400">
-                  <li><strong>operation:</strong> Action</li>
-                  <li><strong>ip:</strong> Server IP</li>
-                  <li><strong>username:</strong> Auth user</li>
-                  <li><strong>password:</strong> Auth pass</li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
-              <p className="text-[10px] text-slate-400 leading-relaxed">
-                <span className="font-semibold" style={{color:"var(--text-muted)"}}>Note:</span> IxNetwork API Servers are used for session management and traffic generation control.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <div style={{ borderTop: '1px solid var(--border-k)', paddingTop: '12px' }}>
+            <h3 style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: '6px' }}>
+              CSV Format
+            </h3>
+            <pre style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius)', padding: '10px 12px', fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflowX: 'auto' }}>
+              {exampleConfig}
+            </pre>
+          </div>
 
-      {/* Divider */}
-      <hr className="border-white/5" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 style={{ fontSize: '0.60rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: '6px' }}>Operations</h3>
+              <ul className="space-y-1" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <li className="flex items-center gap-2"><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} /><strong>ADD:</strong> New chassis</li>
+                <li className="flex items-center gap-2"><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--crimson)', flexShrink: 0 }} /><strong>DELETE:</strong> Remove</li>
+                <li className="flex items-center gap-2"><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} /><strong>UPDATE:</strong> Credentials</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '0.60rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: '6px' }}>Fields</h3>
+              <ul className="space-y-1" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <li><strong>operation:</strong> Action</li>
+                <li><strong>ip:</strong> IP address</li>
+                <li><strong>username:</strong> Auth user</li>
+                <li><strong>password:</strong> Auth pass</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Polling Settings Section */}
+      <hr style={{ borderColor: 'var(--border-k)' }} />
+
+      {/* Polling Settings */}
       <div className="space-y-6">
         <div>
           <h2 className="page-title">Polling Settings</h2>
-          <p className="text-muted-foreground mt-1">
+          <p className="mt-1" style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
             Configure polling intervals for data collection
           </p>
         </div>
@@ -410,7 +221,7 @@ DELETE,192.168.1.200,admin,admin`
             <CardHeader>
               <CardTitle>Polling Intervals</CardTitle>
               <CardDescription>
-                Set the polling intervals (in seconds) for each data category. Lower values mean more frequent updates but higher system load.
+                Set intervals (seconds) per data category. Lower = more frequent, higher CPU load.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -418,7 +229,7 @@ DELETE,192.168.1.200,admin,admin`
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {intervalFields.map((field) => (
                     <div key={field.key} className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <label style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-dim)' }}>
                         {field.label}
                       </label>
                       <Input
@@ -426,39 +237,27 @@ DELETE,192.168.1.200,admin,admin`
                         min="1"
                         value={intervals[field.key]}
                         onChange={(e) => handleIntervalsChange(field.key, e.target.value)}
-                        className="bg-black/40 border-white/10 focus:ring-teal-500/30"
                         required
                       />
-                      <p className="text-[10px] text-muted-foreground italic leading-tight">
+                      <p style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontStyle: 'italic' }}>
                         {field.description}
                       </p>
-                      <p className="text-[10px] font-mono" style={{color:"var(--text-dim)"}}>
-                        {field.key === 'purge' 
-                          ? `Current: ${Math.floor(intervals[field.key] / 3600)} hours`
-                          : `Current: ${Math.floor(intervals[field.key] / 60)} minutes`}
+                      <p style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+                        {field.key === 'purge'
+                          ? `= ${Math.floor(intervals[field.key] / 3600)} hours`
+                          : `= ${Math.floor(intervals[field.key] / 60)} minutes`}
                       </p>
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <Button type="submit" disabled={intervalsLoading} className="bg-teal-600 hover:bg-teal-700">
+                  <Button type="submit" disabled={intervalsLoading}>
                     {intervalsLoading ? 'Saving...' : 'Save Settings'}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setIntervals({
-                        chassis: 60,
-                        cards: 60,
-                        ports: 60,
-                        sensors: 60,
-                        licensing: 120,
-                        perf: 60,
-                        purge: 86400,
-                      })
-                    }}
-                    className="border-white/10 hover:bg-white/5"
+                    onClick={() => setIntervals({ chassis: 60, cards: 60, ports: 60, sensors: 60, licensing: 120, perf: 60, purge: 86400 })}
                   >
                     Reset to Defaults
                   </Button>
@@ -472,31 +271,25 @@ DELETE,192.168.1.200,admin,admin`
               <CardTitle>Recommended Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 text-xs text-slate-400">
-                <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Chassis</span>
-                  <span>1 minute</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Cards</span>
-                  <span>1 minute</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Ports</span>
-                  <span>1 minute</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Sensors</span>
-                  <span>1 minute</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Licensing</span>
-                  <span>2 minutes</span>
-                </div>
+              <div className="space-y-3" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {[
+                  { label: 'Chassis',    value: '1 minute' },
+                  { label: 'Cards',      value: '1 minute' },
+                  { label: 'Ports',      value: '1 minute' },
+                  { label: 'Sensors',    value: '1 minute' },
+                  { label: 'Licensing',  value: '2 minutes' },
+                ].map(({ label, value }, i, arr) => (
+                  <div key={label} className="flex items-center justify-between" style={{ paddingBottom: i < arr.length - 1 ? '8px' : 0, borderBottom: i < arr.length - 1 ? '1px solid var(--border-k)' : 'none' }}>
+                    <span style={{ fontWeight: 500, color: 'var(--cyan)' }}>{label}</span>
+                    <span>{value}</span>
+                  </div>
+                ))}
               </div>
-              <div className="mt-6 p-4 rounded-xl bg-teal-500/5 border border-teal-500/10">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] " mb-2">Pro Tip</h4>
-                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+              <div style={{ marginTop: '20px', padding: '12px', borderRadius: 'var(--radius)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)' }}>
+                <h4 style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: '6px' }}>
+                  Pro Tip
+                </h4>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', lineHeight: 1.5 }}>
                   Lower intervals provide more precision but increase Chassis CPU load.
                   For environments with 50+ chassis, consider balancing intervals based on urgency.
                 </p>
