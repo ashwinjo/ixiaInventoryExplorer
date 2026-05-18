@@ -32,6 +32,12 @@ if [[ "$1" == "--no-cache" ]]; then
     echo -e "${YELLOW}Using --no-cache flag (full rebuild)${NC}"
 fi
 
+# Ensure data directory exists with correct host-user ownership.
+# If Docker creates it on first run it will be root:root and the container's
+# appuser (UID 1000) cannot write the SQLite file.
+mkdir -p ./data
+chmod 755 ./data
+
 # Step 1: Stop and remove existing containers
 echo ""
 echo -e "${GREEN}[1/3] Cleaning up existing containers...${NC}"

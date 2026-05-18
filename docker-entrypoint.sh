@@ -18,8 +18,21 @@ echo "============================================="
 DB_PATH="${DATABASE_PATH:-/app/data/inventory.db}"
 DB_DIR=$(dirname "$DB_PATH")
 
-# Create database directory if it doesn't exist
+# Create database directory if it doesn't exist.
+# If Docker created the bind-mount dir as root:root before first run,
+# mkdir will succeed (dir exists) but appuser won't be able to write.
+# Detect and fail early with a clear message instead of a cryptic
+# aiosqlite/asyncio crash downstream.
 mkdir -p "$DB_DIR" 2>/dev/null || true
+if [ ! -w "$DB_DIR" ]; then
+    echo ""
+    echo "ERROR: Database directory '$DB_DIR' is not writable by this process."
+    echo "  On the host machine run:"
+    echo "    mkdir -p ./data && chmod 755 ./data"
+    echo "  Then restart: ./docker-rebuild.sh"
+    echo ""
+    exit 1
+fi
 
 # Change to app directory
 cd /app
