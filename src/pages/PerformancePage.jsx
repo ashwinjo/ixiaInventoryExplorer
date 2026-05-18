@@ -75,7 +75,7 @@ function PerformancePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">Performance Metrics</h1>
+        <h1 className="page-title">Performance Metrics</h1>
         {selectedIp && selectedIp !== 'fresh' && (
           <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />

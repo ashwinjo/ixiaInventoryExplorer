@@ -1,30 +1,49 @@
-import {
-  useToast,
-} from "@/hooks/use-toast"
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
+import { useEffect, useRef } from "react"
+import { useToast } from "@/hooks/use-toast"
 
-export function Toaster() {
-  const { toasts } = useToast()
+function ToastItem({ id, title, description, variant, onOpenChange }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onOpenChange && onOpenChange(false)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [onOpenChange])
+
+  const isError = variant === 'destructive'
 
   return (
-    <>
-      {toasts.map(function ({ id, title, description, action, variant, open, onOpenChange, ...props }) {
-        return (
-          <Dialog key={id} open={open !== false} onOpenChange={onOpenChange || (() => {})}>
-            <DialogContent className={variant === "destructive" ? "border-destructive" : ""}>
-              <div className="flex flex-col gap-2">
-                {title && <div className="font-semibold">{title}</div>}
-                {description && <div className="text-sm text-muted-foreground">{description}</div>}
-                {action}
-              </div>
-            </DialogContent>
-          </Dialog>
-        )
-      })}
-    </>
+    <div
+      ref={ref}
+      className={`ks-toast ${isError ? 'toast-error' : ''}`}
+      onClick={() => onOpenChange && onOpenChange(false)}
+      role="alert"
+    >
+      {title && <div className="ks-toast-title">{title}</div>}
+      {description && <div className="ks-toast-desc">{description}</div>}
+    </div>
   )
 }
 
+export function Toaster() {
+  const { toasts } = useToast()
+  const visible = toasts.filter(t => t.open !== false)
+
+  if (visible.length === 0) return null
+
+  return (
+    <div className="ks-toast-container">
+      {visible.map(({ id, title, description, variant, onOpenChange }) => (
+        <ToastItem
+          key={id}
+          id={id}
+          title={title}
+          description={description}
+          variant={variant}
+          onOpenChange={onOpenChange}
+        />
+      ))}
+    </div>
+  )
+}

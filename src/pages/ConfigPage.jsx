@@ -193,7 +193,7 @@ DELETE,192.168.1.200,admin,admin`
       {/* Header with Reset Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="page-title">
             Configuration
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -238,7 +238,7 @@ DELETE,192.168.1.200,admin,admin`
         {/* Chassis Configuration */}
         <Card className="border-cyan-500/20">
           <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="text-cyan-400">Chassis Configuration</CardTitle>
+            <CardTitle className="">Chassis Configuration</CardTitle>
             <CardDescription>
               Add, delete, or update chassis in the inventory
             </CardDescription>
@@ -281,8 +281,8 @@ DELETE,192.168.1.200,admin,admin`
             </form>
             
             <div className="border-t border-white/5 pt-4">
-              <h3 className="font-semibold mb-2 text-cyan-400/80 text-xs uppercase tracking-widest">CSV Format:</h3>
-              <pre className="bg-black/40 border border-white/5 p-3 rounded-xl text-xs overflow-x-auto text-cyan-100/70 font-mono">
+              <h3 className="font-semibold mb-2 text-xs uppercase tracking-widest" style={{color:"var(--text-muted)"}}>CSV Format:</h3>
+              <pre className="p-3 rounded-lg text-xs overflow-x-auto font-mono">
                 {exampleConfig}
               </pre>
             </div>
@@ -312,7 +312,7 @@ DELETE,192.168.1.200,admin,admin`
         {/* IxNetwork API Server Configuration */}
         <Card className="border-purple-500/20">
           <CardHeader className="border-b border-white/5 pb-4">
-            <CardTitle className="text-purple-400 flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2" style={{color:"var(--cyan)"}}>
               <Server size={20} />
               IxNetwork API Server Configuration
             </CardTitle>
@@ -358,8 +358,8 @@ DELETE,192.168.1.200,admin,admin`
             </form>
             
             <div className="border-t border-white/5 pt-4">
-              <h3 className="font-semibold mb-2 text-purple-400/80 text-xs uppercase tracking-widest">CSV Format:</h3>
-              <pre className="bg-black/40 border border-white/5 p-3 rounded-xl text-xs overflow-x-auto text-purple-100/70 font-mono">
+              <h3 className="font-semibold mb-2 text-xs uppercase tracking-widest" style={{color:"var(--text-muted)"}}>CSV Format:</h3>
+              <pre className="p-3 rounded-xl text-xs overflow-x-auto font-mono">
                 {exampleIxNetworkConfig}
               </pre>
             </div>
@@ -386,7 +386,7 @@ DELETE,192.168.1.200,admin,admin`
             
             <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                <span className="text-purple-400 font-semibold">Note:</span> IxNetwork API Servers are used for session management and traffic generation control.
+                <span className="font-semibold" style={{color:"var(--text-muted)"}}>Note:</span> IxNetwork API Servers are used for session management and traffic generation control.
               </p>
             </div>
           </CardContent>
@@ -399,7 +399,7 @@ DELETE,192.168.1.200,admin,admin`
       {/* Polling Settings Section */}
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-teal-400">Polling Settings</h2>
+          <h2 className="page-title">Polling Settings</h2>
           <p className="text-muted-foreground mt-1">
             Configure polling intervals for data collection
           </p>
@@ -432,7 +432,7 @@ DELETE,192.168.1.200,admin,admin`
                       <p className="text-[10px] text-muted-foreground italic leading-tight">
                         {field.description}
                       </p>
-                      <p className="text-[10px] text-teal-400/60 font-mono">
+                      <p className="text-[10px] font-mono" style={{color:"var(--text-dim)"}}>
                         {field.key === 'purge' 
                           ? `Current: ${Math.floor(intervals[field.key] / 3600)} hours`
                           : `Current: ${Math.floor(intervals[field.key] / 60)} minutes`}
@@ -474,28 +474,28 @@ DELETE,192.168.1.200,admin,admin`
             <CardContent>
               <div className="space-y-3 text-xs text-slate-400">
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold text-teal-400/80">Chassis</span>
+                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Chassis</span>
                   <span>1 minute</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold text-teal-400/80">Cards</span>
+                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Cards</span>
                   <span>1 minute</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold text-teal-400/80">Ports</span>
+                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Ports</span>
                   <span>1 minute</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                  <span className="font-semibold text-teal-400/80">Sensors</span>
+                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Sensors</span>
                   <span>1 minute</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-teal-400/80">Licensing</span>
+                  <span className="font-semibold" style={{color:"var(--cyan)"}}>Licensing</span>
                   <span>2 minutes</span>
                 </div>
               </div>
               <div className="mt-6 p-4 rounded-xl bg-teal-500/5 border border-teal-500/10">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-2">Pro Tip</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] " mb-2">Pro Tip</h4>
                 <p className="text-[10px] text-slate-400 leading-relaxed italic">
                   Lower intervals provide more precision but increase Chassis CPU load.
                   For environments with 50+ chassis, consider balancing intervals based on urgency.

@@ -3,31 +3,24 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const ThemeContext = createContext(undefined)
 
 export function ThemeProvider({ children }) {
-  // Initialize theme from localStorage or default to 'dark'
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('ixia-theme')
-      return stored || 'dark'
+      return localStorage.getItem('ixia-theme') || 'dark'
     }
     return 'dark'
   })
 
-  // Apply theme to document root
   useEffect(() => {
-    const root = document.documentElement
-    
-    // Remove both classes first
-    root.classList.remove('light', 'dark')
-    
-    // Add the current theme class
-    root.classList.add(theme)
-    
-    // Store preference
+    if (theme === 'day') {
+      document.body.dataset.theme = 'day'
+    } else {
+      delete document.body.dataset.theme
+    }
     localStorage.setItem('ixia-theme', theme)
   }, [theme])
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+    setTheme(prev => prev === 'dark' ? 'day' : 'dark')
   }
 
   const value = {
@@ -35,7 +28,7 @@ export function ThemeProvider({ children }) {
     setTheme,
     toggleTheme,
     isDark: theme === 'dark',
-    isLight: theme === 'light',
+    isLight: theme === 'day',
   }
 
   return (
@@ -54,4 +47,3 @@ export function useTheme() {
 }
 
 export default ThemeContext
-

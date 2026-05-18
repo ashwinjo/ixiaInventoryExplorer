@@ -95,11 +95,11 @@ function IxNetworkServersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="page-title">
               IxNetwork API Servers
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Last Polled at: <span className="text-teal-400 font-mono">{getLastPolledTime(serverList)}</span>
+              Last Polled at: <span className="font-mono" style={{color:"var(--cyan)"}}>{getLastPolledTime(serverList)}</span>
             </p>
           </div>
           <div className="flex gap-2">
@@ -158,7 +158,7 @@ function IxNetworkServersPage() {
                       <TableRow key={server.ixnetwork_api_server_ip}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            <Server className="h-4 w-4 text-purple-400" />
+                            <Server className="h-4 w-4" />
                             {server.ixnetwork_api_server_ip}
                           </div>
                         </TableCell>
@@ -194,7 +194,7 @@ function IxNetworkServersPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="page-title">
             IxNetwork API Servers
           </h1>
         </div>
@@ -219,7 +219,7 @@ function IxNetworkServersPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="page-title">
             IxNetwork API Servers
           </h1>
           <Button
@@ -262,7 +262,7 @@ function IxNetworkServersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <h1 className="page-title">
           IxNetwork API Servers
         </h1>
         <Button

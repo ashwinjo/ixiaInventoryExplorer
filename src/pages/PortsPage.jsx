@@ -272,9 +272,9 @@ function PortsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">Port Details</h1>
+          <h1 className="page-title">Port Details</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Last Polled at: <span className="text-teal-400 font-mono">{getLastPolledTime(portsList)}</span>
+            Last Polled at: <span className="font-mono" style={{color:"var(--cyan)"}}>{getLastPolledTime(portsList)}</span>
           </p>
         </div>
         <div className="flex gap-2">

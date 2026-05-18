@@ -24,10 +24,8 @@ const Tabs = ({ defaultValue, value, onValueChange, className, children }) => {
 const TabsList = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      "inline-flex h-11 items-center justify-center rounded-lg bg-muted/60 p-1 text-muted-foreground border border-border/40",
-      className
-    )}
+    className={cn("inline-flex h-10 items-center justify-center rounded-lg p-1", className)}
+    style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-med)' }}
     {...props}
   />
 ))
@@ -41,14 +39,19 @@ const TabsTrigger = React.forwardRef(({ className, value, ...props }, ref) => {
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all duration-200",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2",
+        "inline-flex items-center justify-center whitespace-nowrap rounded px-4 py-1.5 text-xs font-medium transition-all",
         "disabled:pointer-events-none disabled:opacity-50",
-        isActive
-          ? "bg-gradient-to-r from-cyan-600/20 to-teal-600/20 text-cyan-300 shadow-sm border border-cyan-500/30"
-          : "text-muted-foreground hover:text-cyan-400 hover:bg-cyan-500/10",
         className
       )}
+      style={isActive ? {
+        background: 'var(--cyan-dim)',
+        border: '1px solid var(--cyan-glow)',
+        color: 'var(--cyan)',
+      } : {
+        background: 'transparent',
+        border: '1px solid transparent',
+        color: 'var(--text-dim)',
+      }}
       onClick={() => onValueChange(value)}
       {...props}
     />
@@ -63,10 +66,7 @@ const TabsContent = React.forwardRef(({ className, value, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={cn(
-        "mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2",
-        className
-      )}
+      className={cn("mt-4", className)}
       {...props}
     />
   )
