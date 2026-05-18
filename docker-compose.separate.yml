@@ -25,8 +25,8 @@ services:
     ports:
       - "${BACKEND_PORT:-3001}:${BACKEND_PORT:-3001}"
     volumes:
-      # Mount database directory for persistence
-      - ./data:/app/data
+      # Named volume: Docker manages ownership — no host permission issues
+      - ixia-data:/app/data
       # Optional: Mount credentials file (create if needed)
       # - ./credentials.json:/app/credentials.json:ro
     environment:
