@@ -25,7 +25,7 @@ export default defineConfig({
     host: '0.0.0.0', // Allow external connections (required for Docker)
     port: FRONTEND_PORT,
     strictPort: true, // Fail if port is already in use
-    allowedHosts: 'all', // Accept requests from any Host header (reverse proxy, custom domain)
+    allowedHosts: true, // Accept requests from any Host header (reverse proxy, custom domain)
     proxy: {
       '/api': {
         target: BACKEND_URL,
