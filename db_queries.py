@@ -10,10 +10,11 @@ create_chassis_summary_sql = """CREATE TABLE IF NOT EXISTS chassis_summary_detai
                                 ixOS_REST TEXT,
                                 tags TEXT,  
                                 lastUpdatedAt_UTC TEXT,
-                                mem_bytes TEXT, 
-                                mem_bytes_total TEXT, 
+                                mem_bytes TEXT,
+                                mem_bytes_total TEXT,
                                 cpu_pert_usage TEXT,
-                                os TEXT
+                                os TEXT,
+                                chassisRole TEXT
                                 );"""
                             
                                             

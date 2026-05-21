@@ -128,16 +128,16 @@ async def write_data_to_database(table_name: str, records: List[Dict], ip_tags_d
                     
                     # Insert all records, including failed ones with "Not Reachable" status
                     # This ensures the UI always shows the latest state for polled chassis
-                    await conn.execute(f"""INSERT INTO {table_name} (ip, chassisSN, controllerSN, type_of_chassis, 
-                        physicalCards, status_status, ixOS, ixNetwork_Protocols, ixOS_REST, tags, lastUpdatedAt_UTC, 
-                        mem_bytes, mem_bytes_total, cpu_pert_usage, os) VALUES 
-                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)""",
+                    await conn.execute(f"""INSERT INTO {table_name} (ip, chassisSN, controllerSN, type_of_chassis,
+                        physicalCards, status_status, ixOS, ixNetwork_Protocols, ixOS_REST, tags, lastUpdatedAt_UTC,
+                        mem_bytes, mem_bytes_total, cpu_pert_usage, os, chassisRole) VALUES
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?)""",
                         (record["chassisIp"], record['chassisSerial#'],
                         record['controllerSerial#'], record['chassisType'], record['physicalCards#'],
                         record['chassisStatus'],
-                        record.get('IxOS', "NA"), record.get('IxNetwork Protocols',"NA"), record.get('IxOS REST',"NA"), record['tags'], 
+                        record.get('IxOS', "NA"), record.get('IxNetwork Protocols',"NA"), record.get('IxOS REST',"NA"), record['tags'],
                         record.get('mem_bytes', '0'), record.get('mem_bytes_total', '0'), record.get('cpu_pert_usage', '0'),
-                        record['os']))
+                        record['os'], record.get('chassisRole', 'NA')))
             elif table_name != "chassis_utilization_details":
                 # For other tables, clear all records as before
                 await conn.execute(f"DELETE FROM {table_name}")

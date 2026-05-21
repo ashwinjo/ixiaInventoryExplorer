@@ -84,10 +84,11 @@ def get_chassis_information(session):
                                  "physicalCards#": str(chassis_data.get("numberOfPhysicalCards", "NA")),
                                  "chassisStatus": chassis_data.get('state'),
                                  "lastUpdatedAt_UTC": last_update_at,
-                                 "mem_bytes": mem_bytes, 
-                                 "mem_bytes_total": mem_bytes_total, 
+                                 "mem_bytes": mem_bytes,
+                                 "mem_bytes_total": mem_bytes_total,
                                  "cpu_pert_usage": cpu_pert_usage,
-                                 "os": os
+                                 "os": os,
+                                 "chassisRole": chassis_data.get("chassisRole", "NA")
                                 })
     
     # List of Application on Ix CHhssis

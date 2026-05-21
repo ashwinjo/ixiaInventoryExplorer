@@ -84,7 +84,8 @@ async def fetch_chassis_summary_for_one(chassis: Dict, retry_count: int = 3) -> 
                     "os": "NA",
                     "IxOS": "NA",
                     "IxNetwork Protocols": "NA",
-            "IxOS REST": "NA"
+            "IxOS REST": "NA",
+            "chassisRole": "NA"
         }
     
     # Run the synchronous REST call in a thread pool to avoid blocking

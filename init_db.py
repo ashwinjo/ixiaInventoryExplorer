@@ -85,6 +85,13 @@ def create_data_tables():
         create_table(conn, db_queries.create_usenname_password_table)
         
         create_table(conn, db_queries.create_chassis_summary_sql)
+        # Migrate existing DB: add chassisRole if missing
+        try:
+            conn.execute("ALTER TABLE chassis_summary_details ADD COLUMN chassisRole TEXT")
+            conn.commit()
+            print("[INIT] Added chassisRole column to chassis_summary_details")
+        except Exception:
+            pass  # Column already exists
         create_table(conn, db_queries.create_card_details_records_sql)
         create_table(conn, db_queries.create_port_details_records_sql)
         create_table(conn, db_queries.create_license_details_records_sql)

@@ -23,6 +23,7 @@ class ChassisResponse(BaseModel):
     mem_bytes_total: str = Field(..., description="Total memory in bytes")
     cpu_pert_usage: str = Field(..., description="CPU utilization percentage")
     os: str = Field(..., description="Operating system")
+    chassisRole: str = Field(..., description="Role of the chassis (e.g., Master, Slave, Standalone)")
 
     class Config:
         populate_by_name = True
@@ -42,7 +43,8 @@ class ChassisResponse(BaseModel):
                 "mem_bytes": "8589934592",
                 "mem_bytes_total": "17179869184",
                 "cpu_pert_usage": "45.5",
-                "os": "Linux"
+                "os": "Linux",
+                "chassisRole": "Master"
             }
         }
 

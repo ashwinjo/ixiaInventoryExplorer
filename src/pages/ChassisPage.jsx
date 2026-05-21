@@ -457,6 +457,7 @@ function ChassisPage() {
                     <TableHead>IP Address</TableHead>
                     <TableHead>OS</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>Chassis Role</TableHead>
                     <TableHead>Chassis SN</TableHead>
                     <TableHead>Controller SN</TableHead>
                     <TableHead>Physical Cards</TableHead>
@@ -471,7 +472,7 @@ function ChassisPage() {
                 <TableBody>
                   {filteredChassis.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="text-center text-muted-foreground">
+                      <TableCell colSpan={13} className="text-center text-muted-foreground">
                         No chassis found
                       </TableCell>
                     </TableRow>
@@ -499,6 +500,18 @@ function ChassisPage() {
                           </div>
                         </TableCell>
                         <TableCell>{chassis.chassisType && chassis.chassisType !== 'NA' ? chassis.chassisType : 'N/A'}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            const role = chassis.chassisRole?.toLowerCase()
+                            if (role === 'primary' || role === 'master') {
+                              return <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.4)' }}>{chassis.chassisRole}</span>
+                            } else if (role === 'secondary' || role === 'slave') {
+                              return <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, background: 'rgba(234,179,8,0.15)', color: '#eab308', border: '1px solid rgba(234,179,8,0.4)' }}>{chassis.chassisRole}</span>
+                            } else {
+                              return <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, background: 'rgba(148,163,184,0.15)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.4)' }}>{chassis.chassisRole && chassis.chassisRole !== 'NA' ? chassis.chassisRole : 'N/A'}</span>
+                            }
+                          })()}
+                        </TableCell>
                         <TableCell>{chassis.chassisSerialNumber || chassis['chassisSerial#'] || 'N/A'}</TableCell>
                         <TableCell>{chassis.controllerSerialNumber || chassis['controllerSerial#'] || 'N/A'}</TableCell>
                         <TableCell>{chassis.physicalCardsNumber || chassis['physicalCards#'] || 'N/A'}</TableCell>

@@ -52,7 +52,8 @@ async def get_chassis():
                 "mem_bytes": str(record["mem_bytes"]),
                 "mem_bytes_total": str(record["mem_bytes_total"]),
                 "cpu_pert_usage": str(record["cpu_pert_usage"]),
-                "os": record["os"]
+                "os": record["os"],
+                "chassisRole": record.get("chassisRole", "NA")
             }
             # Use dict directly (already using field names, not aliases)
             # This ensures the frontend gets consistent field names
