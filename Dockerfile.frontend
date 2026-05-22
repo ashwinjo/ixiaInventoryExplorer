@@ -1,15 +1,11 @@
 # Frontend Dockerfile - Vite Dev Server
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy frontend source
 COPY src ./src
 COPY public ./public
 COPY index.html ./
@@ -18,16 +14,10 @@ COPY vite.config.docker.js ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 
-# Copy entrypoint script
 COPY docker-entrypoint-frontend.sh ./
 RUN chmod +x docker-entrypoint-frontend.sh
 
-# Expose Vite dev server port (configurable via PORT env var)
 ENV PORT=5174
 EXPOSE 5174
 
-# Start Vite dev server with Docker-specific config
-# Backend URL can be configured via VITE_BACKEND_URL env var
-# Default: http://backend:3001 (for docker-compose)
 ENTRYPOINT ["./docker-entrypoint-frontend.sh"]
-

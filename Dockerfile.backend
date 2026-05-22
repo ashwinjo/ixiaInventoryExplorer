@@ -3,14 +3,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies and uv (fast Python package installer)
+# Install uv from official image (faster than pip install uv)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     procps \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install uv
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies using uv (much faster than pip for complex deps)
+# Install Python dependencies
 COPY requirements.txt ./
 RUN uv pip install --system --no-cache -r requirements.txt
 
@@ -26,33 +28,20 @@ COPY app ./app
 COPY RestApi ./RestApi
 COPY docker-entrypoint.sh ./
 
-# Create directory for database
+# Create data directory, fix permissions, make entrypoint executable
 RUN mkdir -p /app/data && \
-    chmod 755 /app/data
+    chmod 755 /app/data && \
+    chmod +x /app/docker-entrypoint.sh
 
-# Create non-root user for security
+# Create non-root user and hand off ownership
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 
-# Make entrypoint executable
-RUN chmod +x /app/docker-entrypoint.sh
-
 USER appuser
 
-# Backend port
 ENV PORT=3001
+ENV ADK_URL=http://localhost:8000
 EXPOSE 3001
 
-# ADK Agent URL (configurable at runtime)
-# Default: http://localhost:8000 (for local development)
-# In Docker: Use host.docker.internal:8000 (Mac/Windows) or host IP (Linux)
-ENV ADK_URL=http://localhost:8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:${PORT}/health || exit 1
-
-# Entrypoint script handles database init and background pollers
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-3001}"]
-
