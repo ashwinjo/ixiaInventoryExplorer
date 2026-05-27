@@ -3,14 +3,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install uv from official image (faster than pip install uv)
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
-
-# Install system dependencies
+# Install system dependencies + uv from PyPI (avoids GHCR pull)
 RUN apt-get update && apt-get install -y \
     procps \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
 # Install Python dependencies
 COPY requirements.txt ./
