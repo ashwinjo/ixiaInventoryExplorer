@@ -2,6 +2,7 @@
 Ports API endpoints
 """
 import asyncio
+import os
 from fastapi import APIRouter, HTTPException
 import httpx
 from app.models.ports import PortResponse, PortListResponse
@@ -9,7 +10,7 @@ from app.database import read_data_from_database
 
 router = APIRouter(prefix="/api/ports", tags=["ports"])
 
-SESSIONS_URL = "http://localhost:8080/sessions/"
+SESSIONS_URL = os.getenv("SESSIONS_URL", "http://host.docker.internal:8080/sessions/")
 
 
 async def _build_session_map() -> dict:
@@ -22,11 +23,13 @@ async def _build_session_map() -> dict:
             data = resp.json()
         session_map = {}
         for server in data.get("data", {}).get("servers", []):
+            server_host = server.get("host", server.get("name", ""))
             for session in server.get("sessions", []):
-                name = session.get("name", "")
+                session_name = session.get("name", "")
+                display = f"{server_host}/{session_name}"
                 for p in session.get("ports", []):
                     key = (str(p["chassis_name"]), int(p["card"]), int(p["port"]))
-                    session_map[key] = name
+                    session_map[key] = display
         return session_map
     except Exception:
         return {}

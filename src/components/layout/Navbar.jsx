@@ -12,7 +12,7 @@ const navigation = [
 
 const configNavItem = { name: '[ADD | DELETE] Chassis', href: '/config' }
 
-export default function Navbar() {
+export default function Navbar({ isAgentVisible = false, onAgentToggle }) {
   const location = useLocation()
   const [logoError, setLogoError] = useState(false)
   const { toggleTheme, isDark } = useTheme()
@@ -164,6 +164,38 @@ export default function Navbar() {
           >
             {configNavItem.name}
           </Link>
+
+          {/* Agent toggle */}
+          {onAgentToggle && (
+            <button
+              onClick={onAgentToggle}
+              title={isAgentVisible ? 'Hide Agent' : 'Show Agent'}
+              style={{
+                padding: '5px 11px',
+                borderRadius: '6px',
+                border: '1px solid',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.70rem',
+                fontWeight: 500,
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'background 150ms ease, border-color 150ms ease, box-shadow 150ms ease',
+                ...(isAgentVisible ? {
+                  color: '#c084fc',
+                  borderColor: 'rgba(168,85,247,0.55)',
+                  background: 'rgba(168,85,247,0.18)',
+                  boxShadow: '0 0 8px rgba(168,85,247,0.25)',
+                } : {
+                  color: 'rgba(255,255,255,0.60)',
+                  borderColor: 'rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                }),
+              }}
+            >
+              Agent
+            </button>
+          )}
 
           {/* Day/Night slider */}
           <button

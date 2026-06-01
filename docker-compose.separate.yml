@@ -34,6 +34,7 @@ services:
       - CLEAN_DB_ON_START=${CLEAN_DB_ON_START:-false}
       # Mac/Windows: host.docker.internal | Linux: host IP or service name
       - ADK_URL=${ADK_URL:-http://host.docker.internal:8000}
+      - SESSIONS_URL=${SESSIONS_URL:-http://host.docker.internal:8080/sessions/}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-3001}/health"]
