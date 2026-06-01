@@ -23,6 +23,7 @@ class PortResponse(BaseModel):
     freePorts: Optional[int] = Field(None, description="Free ports")
     transmitState: str = Field(..., description="Transmit state")
     lastUpdatedAt_UTC: str = Field(..., description="Last update timestamp in UTC")
+    ixNetworkSession: str = Field("NA", description="IxNetwork session using this port")
 
     class Config:
         json_schema_extra = {

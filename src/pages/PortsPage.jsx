@@ -47,7 +47,8 @@ function PortsPage() {
     speed: '',
     type: '',
     transceiverModel: '',
-    transceiverManufacturer: ''
+    transceiverManufacturer: '',
+    ixNetworkSession: ''
   })
 
   const portsList = data?.ports || []
@@ -64,7 +65,8 @@ function PortsPage() {
       speed: new Set(),
       type: new Set(),
       transceiverModel: new Set(),
-      transceiverManufacturer: new Set()
+      transceiverManufacturer: new Set(),
+      ixNetworkSession: new Set()
     }
 
     portsList.forEach((port) => {
@@ -78,6 +80,7 @@ function PortsPage() {
       if (port.type && port.type !== 'NA') values.type.add(port.type)
       if (port.transceiverModel && port.transceiverModel !== 'NA') values.transceiverModel.add(port.transceiverModel)
       if (port.transceiverManufacturer && port.transceiverManufacturer !== 'NA') values.transceiverManufacturer.add(port.transceiverManufacturer)
+      if (port.ixNetworkSession && port.ixNetworkSession !== 'NA') values.ixNetworkSession.add(port.ixNetworkSession)
     })
 
     return Object.fromEntries(
@@ -114,6 +117,8 @@ function PortsPage() {
               return port.transceiverModel === filterValue
             case 'transceiverManufacturer':
               return port.transceiverManufacturer === filterValue
+            case 'ixNetworkSession':
+              return port.ixNetworkSession === filterValue
             default:
               return true
           }
@@ -155,7 +160,8 @@ function PortsPage() {
       speed: '',
       type: '',
       transceiverModel: '',
-      transceiverManufacturer: ''
+      transceiverManufacturer: '',
+      ixNetworkSession: ''
     })
     setSearchTerm('')
   }
@@ -238,6 +244,7 @@ function PortsPage() {
       { key: 'type', label: 'Type' },
       { key: 'transceiverModel', label: 'Transceiver Model' },
       { key: 'transceiverManufacturer', label: 'Transceiver Manufacturer' },
+      { key: 'ixNetworkSession', label: 'IxNetwork Session' },
     ]
 
     const exportData = sortedPorts.map(port => ({
@@ -251,6 +258,7 @@ function PortsPage() {
       type: port.type,
       transceiverModel: port.transceiverModel,
       transceiverManufacturer: port.transceiverManufacturer,
+      ixNetworkSession: port.ixNetworkSession,
     }))
 
     exportToCSV(exportData, headers, `ports_export_${new Date().toISOString().split('T')[0]}.csv`)
@@ -340,6 +348,7 @@ function PortsPage() {
                 { key: 'type',                   label: 'Port Type',    values: columnValues.type,                   render: v => v },
                 { key: 'transceiverModel',       label: 'Xcvr Model',   values: columnValues.transceiverModel,       render: v => v },
                 { key: 'transceiverManufacturer',label: 'Xcvr Mfr',    values: columnValues.transceiverManufacturer,render: v => v },
+                { key: 'ixNetworkSession',       label: 'IxNet Session',values: columnValues.ixNetworkSession,       render: v => v },
               ].map(({ key, label, values, render }) => {
                 const active = !!filters[key]
                 return (
@@ -398,12 +407,15 @@ function PortsPage() {
                   <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('transceiverManufacturer')}>
                     Transceiver Manufacturer{getSortIcon('transceiverManufacturer')}
                   </TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('ixNetworkSession')}>
+                    IxNetwork Session{getSortIcon('ixNetworkSession')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedPorts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground">
                       No ports found
                     </TableCell>
                   </TableRow>
@@ -422,6 +434,7 @@ function PortsPage() {
                       <TableCell>{port.type}</TableCell>
                       <TableCell>{port.transceiverModel}</TableCell>
                       <TableCell>{port.transceiverManufacturer}</TableCell>
+                      <TableCell>{port.ixNetworkSession}</TableCell>
                     </TableRow>
                   ))
                 )}
