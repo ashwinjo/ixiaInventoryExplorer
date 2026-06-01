@@ -74,6 +74,9 @@ detect_os() {
 
 OS=$(detect_os)
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MCP_DIR="$(cd "$SCRIPT_DIR/../ixia-inventory-management-mcp" 2>/dev/null && pwd || true)"
+
 # =============================================================================
 # Prerequisite: sudo available (Linux/WSL only)
 # =============================================================================
@@ -283,14 +286,14 @@ if [[ "${1:-}" == "--no-cache" ]]; then
 fi
 
 # Step 1: Stop existing containers (ignore errors if nothing running)
-echo -e "${GREEN}[1/3] Cleaning up existing containers...${NC}"
+echo -e "${GREEN}[1/4] Cleaning up existing containers...${NC}"
 dc -f docker-compose.separate.yml down 2>/dev/null || true
 dc -f docker-compose.combined.yml down 2>/dev/null || true
 echo "Done"
 
 # Step 2: Rebuild images
 echo ""
-echo -e "${GREEN}[2/3] Rebuilding Docker images...${NC}"
+echo -e "${GREEN}[2/4] Rebuilding Docker images...${NC}"
 if [[ -n "$NO_CACHE_FLAG" ]]; then
     dc -f docker-compose.separate.yml build --no-cache
 else
@@ -300,7 +303,7 @@ echo "Done"
 
 # Step 3: Start containers
 echo ""
-echo -e "${GREEN}[3/3] Starting containers...${NC}"
+echo -e "${GREEN}[3/4] Starting containers...${NC}"
 dc -f docker-compose.separate.yml up -d
 echo "Done"
 
@@ -314,13 +317,29 @@ echo "Container Status:"
 echo "============================================="
 dc -f docker-compose.separate.yml ps
 
+# Step 4: Start MCP Server
+echo ""
+echo -e "${GREEN}[4/4] Starting MCP Server...${NC}"
+if [[ -n "$MCP_DIR" && -d "$MCP_DIR" ]]; then
+    echo "Found MCP server at: $MCP_DIR"
+    (cd "$MCP_DIR" && docker compose up -d --build)
+    echo "Done"
+else
+    echo -e "${YELLOW}[SKIP]${NC} MCP server repo not found. Clone it to start automatically:"
+    echo "  git clone https://github.com/ashwinjo/ixia-inventory-management-mcp ../ixia-inventory-management-mcp"
+fi
+
 echo ""
 echo -e "${GREEN}Rebuild complete!${NC}"
 echo ""
 echo "Access points:"
-echo "  Frontend: http://localhost:5174"
-echo "  Backend:  http://localhost:3001"
-echo "  API Docs: http://localhost:3001/docs"
+echo "  Frontend:   http://localhost:5174"
+echo "  Backend:    http://localhost:3001"
+echo "  API Docs:   http://localhost:3001/docs"
+if [[ -n "$MCP_DIR" && -d "$MCP_DIR" ]]; then
+echo "  MCP Server: http://localhost:8888/mcp"
+echo "  MCP Docs:   http://localhost:8888/docs"
+fi
 echo ""
 echo "View logs:"
 echo "  docker compose -f docker-compose.separate.yml logs -f"
