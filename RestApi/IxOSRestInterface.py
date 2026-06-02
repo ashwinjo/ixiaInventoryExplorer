@@ -197,10 +197,12 @@ class IxRestSession(object):
             self.get_ixos_uri() + '/ports/%d/operations/takeownership' % resource_id
         )
 
-    def release_ownership(self, resource_id):
+    def release_ownership(self, resource_id, force=False):
+        payload = {"force": True} if force else None
         return self.http_request(
             'POST',
-            self.get_ixos_uri() + '/ports/%d/operations/releaseownership' % resource_id
+            self.get_ixos_uri() + '/ports/%d/operations/releaseownership' % resource_id,
+            payload=payload
         )
 
     def reboot_port(self, resource_id):

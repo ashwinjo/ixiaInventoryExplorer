@@ -177,7 +177,7 @@ async def release_port_ownership(request: ReleaseOwnershipRequest):
             raise HTTPException(status_code=404, detail=f"Port {card_int}/{port_int} not found on chassis")
 
         port_id = ports[0]["id"]
-        session.release_ownership(port_id)
+        session.release_ownership(port_id, force=True)
 
         return ReleaseOwnershipResponse(
             message="Port ownership released successfully",
