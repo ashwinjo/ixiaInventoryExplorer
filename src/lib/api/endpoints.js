@@ -11,6 +11,7 @@ export const pollCards = () => api.post('/api/poll/cards')
 // Ports endpoints
 export const getPorts = () => api.get('/api/ports')
 export const pollPorts = () => api.post('/api/poll/ports')
+export const releasePortOwnership = (data) => api.post('/api/ports/release-ownership', data)
 
 // Licenses endpoints
 export const getLicenses = () => api.get('/api/licenses')

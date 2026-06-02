@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useApi, useMutation } from '@/hooks/use-api'
-import { getPorts, pollPorts } from '@/lib/api/endpoints'
+import { getPorts, pollPorts, releasePortOwnership } from '@/lib/api/endpoints'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -13,7 +13,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { RefreshCw, Search, Download, ArrowUpDown, ArrowUp, ArrowDown, X, Unlock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { exportToCSV, getLastPolledTime } from '@/lib/utils'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -29,8 +30,10 @@ function mbpsToGbps(speed) {
 function PortsPage() {
   const { data, loading, error, refetch } = useApi(getPorts)
   const { mutate: pollMutate } = useMutation(pollPorts)
+  const { mutate: releaseMutate, loading: releaseLoading } = useMutation(releasePortOwnership)
   const { toast } = useToast()
-  
+
+  const [releasePort, setReleasePort] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [sortColumn, setSortColumn] = useState(null)
@@ -268,6 +271,27 @@ function PortsPage() {
     })
   }
 
+  const handleReleaseConfirm = () => {
+    releaseMutate(
+      {
+        chassisIp: releasePort.chassisIp,
+        cardNumber: releasePort.cardNumber,
+        portNumber: releasePort.portNumber,
+      },
+      {
+        onSuccess: () => {
+          toast({ title: 'Released', description: `Port ${releasePort.cardNumber}/${releasePort.portNumber} on ${releasePort.chassisIp} released.` })
+          setReleasePort(null)
+          refetch()
+        },
+        onError: (err) => {
+          toast({ variant: 'destructive', title: 'Error', description: err.response?.data?.detail || 'Failed to release port ownership.' })
+          setReleasePort(null)
+        },
+      }
+    )
+  }
+
   if (loading && !portsList.length) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -410,12 +434,13 @@ function PortsPage() {
                   <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('ixNetworkSession')}>
                     IxNetwork Session{getSortIcon('ixNetworkSession')}
                   </TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedPorts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground">
                       No ports found
                     </TableCell>
                   </TableRow>
@@ -435,6 +460,18 @@ function PortsPage() {
                       <TableCell>{port.transceiverModel}</TableCell>
                       <TableCell>{port.transceiverManufacturer}</TableCell>
                       <TableCell>{port.ixNetworkSession}</TableCell>
+                      <TableCell>
+                        {port.owner && port.owner !== 'Free' && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setReleasePort(port)}
+                          >
+                            <Unlock className="h-3 w-3 mr-1" />
+                            Release
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -446,6 +483,25 @@ function PortsPage() {
           </div>
         </CardContent>
       </Card>
+      <Dialog open={!!releasePort} onOpenChange={(open) => { if (!open) setReleasePort(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Release Port Ownership</DialogTitle>
+            <DialogDescription>
+              Release ownership of port <strong>{releasePort?.cardNumber}/{releasePort?.portNumber}</strong> on{' '}
+              <strong>{releasePort?.chassisIp}</strong>?
+              <br /><br />
+              Currently owned by: <strong>{releasePort?.owner}</strong>. Active tests on this port will be interrupted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReleasePort(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleReleaseConfirm} disabled={releaseLoading}>
+              {releaseLoading ? 'Releasing...' : 'Release Ownership'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

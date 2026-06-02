@@ -2,11 +2,13 @@
 Ports API endpoints
 """
 import asyncio
+import json
 import os
 from fastapi import APIRouter, HTTPException
 import httpx
-from app.models.ports import PortResponse, PortListResponse
-from app.database import read_data_from_database
+from app.models.ports import PortResponse, PortListResponse, ReleaseOwnershipRequest, ReleaseOwnershipResponse
+from app.database import read_data_from_database, read_username_password_from_database
+from RestApi.IxOSRestInterface import IxRestSession
 
 router = APIRouter(prefix="/api/ports", tags=["ports"])
 
@@ -139,4 +141,51 @@ async def get_ports():
         return PortListResponse(ports=port_list, count=len(port_list))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching port data: {str(e)}")
+
+
+def _parse_card_port(card_number: int, port_number_raw) -> tuple:
+    """Parse (card_int, port_int) from DB values.
+    portNumber may be int, '1', '4.2', or '3/1'."""
+    port_str = str(port_number_raw)
+    if '.' in port_str:
+        parts = port_str.split('.')
+        return int(card_number), int(parts[1])
+    if '/' in port_str:
+        parts = port_str.split('/')
+        return int(card_number), int(parts[1])
+    return int(card_number), int(port_str)
+
+
+@router.post("/release-ownership", response_model=ReleaseOwnershipResponse)
+async def release_port_ownership(request: ReleaseOwnershipRequest):
+    """Release ownership of a port on the chassis."""
+    try:
+        chassis_list_data = await read_username_password_from_database()
+        if not chassis_list_data:
+            raise HTTPException(status_code=404, detail="No chassis configured")
+
+        chassis_list = json.loads(chassis_list_data)
+        chassis = next((c for c in chassis_list if c["ip"] == request.chassisIp), None)
+        if not chassis:
+            raise HTTPException(status_code=404, detail=f"Chassis {request.chassisIp} not found")
+
+        card_int, port_int = _parse_card_port(request.cardNumber, request.portNumber)
+
+        session = IxRestSession(chassis["ip"], chassis["username"], chassis["password"])
+        ports = session.get_ports(params={"cardNumber": card_int, "portNumber": port_int}).data
+        if not ports:
+            raise HTTPException(status_code=404, detail=f"Port {card_int}/{port_int} not found on chassis")
+
+        port_id = ports[0]["id"]
+        session.release_ownership(port_id)
+
+        return ReleaseOwnershipResponse(
+            message="Port ownership released successfully",
+            chassisIp=request.chassisIp,
+            portIdentifier=f"{card_int}/{port_int}"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error releasing port ownership: {str(e)}")
 

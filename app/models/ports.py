@@ -61,3 +61,15 @@ class PortListResponse(BaseModel):
             }
         }
 
+
+class ReleaseOwnershipRequest(BaseModel):
+    chassisIp: str = Field(..., description="Chassis IP address")
+    cardNumber: int = Field(..., description="Card number (integer)")
+    portNumber: Union[int, str] = Field(..., description="Port number or fullyQualifiedPortName e.g. '4.2'")
+
+
+class ReleaseOwnershipResponse(BaseModel):
+    message: str
+    chassisIp: str
+    portIdentifier: str
+
