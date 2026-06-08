@@ -2,8 +2,6 @@
 
 Web app for managing Ixia chassis inventory. FastAPI backend + React frontend.
 
-![UI_Agent](UI_Agent.png)
-
 **Stack:** Python 3.11 / FastAPI / SQLite | React 18 / Vite / Tailwind / shadcn/ui | Docker
 
 ---
@@ -101,16 +99,6 @@ DELETE,192.168.1.101,admin,password
 | Health | `/health` | — |
 
 Other: `POST /api/tags/add`, `POST /api/tags/remove`, `POST /api/logs/collect`
-
----
-
-## Architecture
-
-![Architecture](IIT_Arch.png)
-
-**Optional integrations:**
-- **IxNetwork Session MCP** (port 8888): https://github.com/ashwinjo/ixnetwork-mcp
-- **Inventory ADK Agent** (port 8000): https://github.com/ashwinjo/inventory-adk-agents
 
 ---
 
