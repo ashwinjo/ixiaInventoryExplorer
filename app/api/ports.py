@@ -172,11 +172,18 @@ async def release_port_ownership(request: ReleaseOwnershipRequest):
         card_int, port_int = _parse_card_port(request.cardNumber, request.portNumber)
 
         session = IxRestSession(chassis["ip"], chassis["username"], chassis["password"])
-        ports = session.get_ports(params={"cardNumber": card_int, "portNumber": port_int}).data
-        if not ports:
+        all_ports = session.get_ports().data
+        if not all_ports:
+            raise HTTPException(status_code=404, detail=f"No ports found on chassis {request.chassisIp}")
+
+        port = next(
+            (p for p in all_ports if p.get("cardNumber") == card_int and p.get("portNumber") == port_int),
+            None
+        )
+        if port is None:
             raise HTTPException(status_code=404, detail=f"Port {card_int}/{port_int} not found on chassis")
 
-        port_id = ports[0]["id"]
+        port_id = port["id"]
         session.release_ownership(port_id, force=True)
 
         return ReleaseOwnershipResponse(
